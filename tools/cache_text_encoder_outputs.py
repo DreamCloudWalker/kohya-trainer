@@ -1,4 +1,4 @@
-# text encoder出力のdiskへの事前キャッシュを行う / cache text encoder outputs to disk in advance
+# text encoder输出diskへの事前キャッシュを行う / cache text encoder outputs to disk in advance
 
 import argparse
 import math
@@ -24,19 +24,19 @@ def cache_to_disk(args: argparse.Namespace) -> None:
     # check cache arg
     assert (
         args.cache_text_encoder_outputs_to_disk
-    ), "cache_text_encoder_outputs_to_disk must be True / cache_text_encoder_outputs_to_diskはTrueである必要があります"
+    ), "cache_text_encoder_outputs_to_disk must be True / cache_text_encoder_outputs_to_disk牙齿Trueである必要があります"
 
-    # できるだけ準備はしておくが今のところSDXLのみしか動かない
+    # できるだけ準備牙齿しておくが今のところSDXLのみしか動かない
     assert (
         args.sdxl
-    ), "cache_text_encoder_outputs_to_disk is only available for SDXL / cache_text_encoder_outputs_to_diskはSDXLのみ利用可能です"
+    ), "cache_text_encoder_outputs_to_disk is only available for SDXL / cache_text_encoder_outputs_to_disk牙齿SDXLのみ利用可能です"
 
     use_dreambooth_method = args.in_json is None
 
     if args.seed is not None:
-        set_seed(args.seed)  # 乱数系列を初期化する
+        set_seed(args.seed)  # 初始化随机数系列
 
-    # tokenizerを準備する：datasetを動かすために必要
+    # tokenizer准备：datasetを動かすために必要
     if args.sdxl:
         tokenizer1, tokenizer2 = sdxl_train_util.load_tokenizers(args)
         tokenizers = [tokenizer1, tokenizer2]
@@ -44,7 +44,7 @@ def cache_to_disk(args: argparse.Namespace) -> None:
         tokenizer = train_util.load_tokenizer(args)
         tokenizers = [tokenizer]
 
-    # データセットを準備する
+    # データセット准备
     if args.dataset_class is None:
         blueprint_generator = BlueprintGenerator(ConfigSanitizer(True, True, False, True))
         if args.dataset_config is not None:
@@ -53,7 +53,7 @@ def cache_to_disk(args: argparse.Namespace) -> None:
             ignored = ["train_data_dir", "in_json"]
             if any(getattr(args, attr) is not None for attr in ignored):
                 print(
-                    "ignore following options because config file is found: {0} / 設定ファイルが利用されるため以下のオプションは無視されます: {0}".format(
+                    "ignore following options because config file is found: {0} / 設定ファイルが利用されるため以下のオプション牙齿無視されます: {0}".format(
                         ", ".join(ignored)
                     )
                 )
@@ -94,14 +94,14 @@ def cache_to_disk(args: argparse.Namespace) -> None:
     ds_for_collater = train_dataset_group if args.max_data_loader_n_workers == 0 else None
     collater = train_util.collater_class(current_epoch, current_step, ds_for_collater)
 
-    # acceleratorを準備する
+    # accelerator准备
     print("prepare accelerator")
     accelerator = train_util.prepare_accelerator(args)
 
-    # mixed precisionに対応した型を用意しておき適宜castする
+    # mixed precision准备与castする
     weight_dtype, _ = train_util.prepare_dtype(args)
 
-    # モデルを読み込む
+    # 阅读模型
     print("load model")
     if args.sdxl:
         (_, text_encoder1, text_encoder2, _, _, _, _) = sdxl_train_util.load_target_model(args, accelerator, "sdxl", weight_dtype)
@@ -115,11 +115,11 @@ def cache_to_disk(args: argparse.Namespace) -> None:
         text_encoder.requires_grad_(False)
         text_encoder.eval()
 
-    # dataloaderを準備する
+    # dataloader准备
     train_dataset_group.set_caching_mode("text")
 
-    # DataLoaderのプロセス数：0はメインプロセスになる
-    n_workers = min(args.max_data_loader_n_workers, os.cpu_count() - 1)  # cpu_count-1 ただし最大で指定された数まで
+    # DataLoader过程数量：0牙齿メインプロセスになる
+    n_workers = min(args.max_data_loader_n_workers, os.cpu_count() - 1)  # cpu_count-1 但是，达到最大数字
 
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset_group,
@@ -130,10 +130,10 @@ def cache_to_disk(args: argparse.Namespace) -> None:
         persistent_workers=args.persistent_data_loader_workers,
     )
 
-    # acceleratorを使ってモデルを準備する：マルチGPUで使えるようになるはず
+    # acceleratorを使ってモデル准备：マルチGPUで使えるようになる牙齿ず
     train_dataloader = accelerator.prepare(train_dataloader)
 
-    # データ取得のためのループ
+    # 数据获取的循环
     for batch in tqdm(train_dataloader):
         absolute_paths = batch["absolute_paths"]
         input_ids1_list = batch["input_ids1_list"]
@@ -177,7 +177,7 @@ def setup_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--skip_existing",
         action="store_true",
-        help="skip images if npz already exists (both normal and flipped exists if flip_aug is enabled) / npzが既に存在する画像をスキップする（flip_aug有効時は通常、反転の両方が存在する画像をスキップ）",
+        help="skip images if npz already exists (both normal and flipped exists if flip_aug is enabled) / npzが既に存在する画像をスキップする（flip_aug有効時牙齿通常、反転の両方が存在する画像をスキップ）",
     )
     return parser
 

@@ -42,7 +42,7 @@ from .train_util import (
 
 
 def add_config_arguments(parser: argparse.ArgumentParser):
-  parser.add_argument("--dataset_config", type=Path, default=None, help="config file for detail settings / 詳細な設定用の設定ファイル")
+  parser.add_argument("--dataset_config", type=Path, default=None, help="config file for detail settings / 设置文件以详细设置")
 
 # TODO: inherit Params class in Subset, Dataset
 
@@ -217,7 +217,7 @@ class ConfigSanitizer:
   }
 
   def __init__(self, support_dreambooth: bool, support_finetuning: bool, support_controlnet: bool, support_dropout: bool) -> None:
-    assert support_dreambooth or support_finetuning or support_controlnet, "Neither DreamBooth mode nor fine tuning mode specified. Please specify one mode or more. / DreamBooth モードか fine tuning モードのどちらも指定されていません。1つ以上指定してください。"
+    assert support_dreambooth or support_finetuning or support_controlnet, "Neither DreamBooth mode nor fine tuning mode specified. Please specify one mode or more. / DreamBooth 模式？ fine tuning モードのどちらも指定されていません。1つ以上指定してください。"
 
     self.db_subset_schema = self.__merge_dict(
       self.SUBSET_ASCENDABLE_SCHEMA,
@@ -277,7 +277,7 @@ class ConfigSanitizer:
         elif all(["metadata_file" not in subset for subset in subsets_config]):
           return Schema(self.db_dataset_schema)(dataset_config)
         else:
-          raise voluptuous.Invalid("DreamBooth subset and fine tuning subset cannot be mixed in the same dataset. Please split them into separate datasets. / DreamBoothのサブセットとfine tuninのサブセットを同一のデータセットに混在させることはできません。別々のデータセットに分割してください。")
+          raise voluptuous.Invalid("DreamBooth subset and fine tuning subset cannot be mixed in the same dataset. Please split them into separate datasets. / DreamBooth带有子集fine tuninのサブセットを同一のデータセットに混在させることはできません。別々のデータセットに分割してください。")
 
       self.dataset_schema = validate_flex_dataset
     elif support_dreambooth:
@@ -313,7 +313,7 @@ class ConfigSanitizer:
     try:
       return self.user_config_validator(user_config)
     except MultipleInvalid:
-      # TODO: エラー発生時のメッセージをわかりやすくする
+      # TODO: 当出现错误更容易理解时发出消息
       print("Invalid user config / ユーザ設定の形式が正しくないようです")
       raise
 
@@ -324,7 +324,7 @@ class ConfigSanitizer:
       return self.argparse_config_validator(argparse_namespace)
     except MultipleInvalid:
       # XXX: this should be a bug
-      print("Invalid cmdline parsed arguments. This should be a bug. / コマンドラインのパース結果が正しくないようです。プログラムのバグの可能性が高いです。")
+      print("Invalid cmdline parsed arguments. This should be a bug. / 命令行的垂直结果似乎不正确。プログラムのバグの可能性が高いです。")
       raise
 
   # NOTE: value would be overwritten by latter dict if there is already the same key
@@ -497,7 +497,7 @@ def generate_dreambooth_subsets_config_by_subdirs(train_data_dir: Optional[str] 
     try:
       n_repeats = int(tokens[0])
     except ValueError as e:
-      print(f"ignore directory without repeats / 繰り返し回数のないディレクトリを無視します: {name}")
+      print(f"ignore directory without repeats / 忽略目录而没有重复的时间: {name}")
       return 0, ""
     caption_by_folder = '_'.join(tokens[1:])
     return n_repeats, caption_by_folder

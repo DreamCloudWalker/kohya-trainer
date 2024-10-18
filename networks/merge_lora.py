@@ -153,7 +153,7 @@ def merge_lora_models(models, ratios, merge_dtype):
             if key in merged_sd:
                 assert (
                     merged_sd[key].size() == lora_sd[key].size()
-                ), f"weights shape mismatch merging v1 and v2, different dims? / 重みのサイズが合いません。v1とv2、または次元数の異なるモデルはマージできません"
+                ), f"weights shape mismatch merging v1 and v2, different dims? / 体重的大小不合适。v1とv2、または次元数の異なるモデルはマージできません"
                 merged_sd[key] = merged_sd[key] + lora_sd[key] * scale
             else:
                 merged_sd[key] = lora_sd[key] * scale
@@ -170,7 +170,7 @@ def merge_lora_models(models, ratios, merge_dtype):
 
 
 def merge(args):
-    assert len(args.models) == len(args.ratios), f"number of models must be equal to number of ratios / モデルの数と重みの数は合わせてください"
+    assert len(args.models) == len(args.ratios), f"number of models must be equal to number of ratios / 请匹配型号的数量和权重的数量"
 
     def str_to_dtype(p):
         if p == "float":

@@ -41,7 +41,7 @@ class DyLoRAModule(torch.nn.Module):
             alpha = alpha.detach().float().numpy()  # without casting, bf16 causes error
         alpha = self.lora_dim if alpha is None or alpha == 0 else alpha
         self.scale = alpha / self.lora_dim
-        self.register_buffer("alpha", torch.tensor(alpha))  # 定数として扱える
+        self.register_buffer("alpha", torch.tensor(alpha))  # 可以被视为常数
 
         self.is_conv2d = org_module.__class__.__name__ == "Conv2d"
         self.is_conv2d_3x3 = self.is_conv2d and org_module.kernel_size == (3, 3)
@@ -77,7 +77,7 @@ class DyLoRAModule(torch.nn.Module):
         trainable_rank = random.randint(0, self.lora_dim - 1)
         trainable_rank = trainable_rank - trainable_rank % self.unit  # make sure the rank is a multiple of unit
 
-        # 一部のパラメータを固定して、残りのパラメータを学習する
+        # 修复一些参数、残りのパラメータを学習する
         for i in range(0, trainable_rank):
             self.lora_A[i].requires_grad = False
             self.lora_B[i].requires_grad = False
@@ -106,15 +106,15 @@ class DyLoRAModule(torch.nn.Module):
             if self.is_conv2d:
                 ab = ab.transpose(1, 2).reshape(ab.size(0), -1, *x.size()[2:])  # (N, H*W, C) -> (N, C, H, W)
 
-        # 最後の項は、低rankをより大きくするためのスケーリング（じゃないかな）
+        # 最后一部分是、低rankをより大きくするためのスケーリング（じゃないかな）
         result = result + ab * self.scale * math.sqrt(self.lora_dim / (trainable_rank + self.unit))
 
-        # NOTE weightに加算してからlinear/conv2dを呼んだほうが速いかも
+        # NOTE weight添加后linear/conv2dを呼んだほうが速いかも
         return result
 
     def state_dict(self, destination=None, prefix="", keep_vars=False):
-        # state dictを通常のLoRAと同じにする:
-        # nn.ParameterListは `.lora_A.0` みたいな名前になるので、forwardと同様にcatして入れ替える
+        # state dict普通的LoRAと同じにする:
+        # nn.ParameterList牙齿 `.lora_A.0` みたいな名前になるので、forwardと同様にcatして入れ替える
         sd = super().state_dict(destination=destination, prefix=prefix, keep_vars=keep_vars)
 
         lora_A_weight = torch.cat(tuple(self.lora_A), dim=0)
@@ -141,7 +141,7 @@ class DyLoRAModule(torch.nn.Module):
         return sd
 
     def _load_from_state_dict(self, state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs):
-        # 通常のLoRAと同じstate dictを読み込めるようにする：この方法はchatGPTに聞いた
+        # 普通的LoRAと同じstate dictを読み込めるようにする：この方法牙齿chatGPTに聞いた
         lora_A_weight = state_dict.pop(self.lora_name + ".lora_down.weight", None)
         lora_B_weight = state_dict.pop(self.lora_name + ".lora_up.weight", None)
 

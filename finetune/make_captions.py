@@ -21,7 +21,7 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 IMAGE_SIZE = 384
 
-# 正方形でいいのか？　という気がするがソースがそうなので
+# 可以成为一个正方形吗？？　という気が做がソースがそうなので
 IMAGE_TRANSFORM = transforms.Compose(
     [
         transforms.Resize((IMAGE_SIZE, IMAGE_SIZE), interpolation=InterpolationMode.BICUBIC),
@@ -31,7 +31,7 @@ IMAGE_TRANSFORM = transforms.Compose(
 )
 
 
-# 共通化したいが微妙に処理が異なる……
+# 我想分享，但是处理略有不同……
 class ImageLoadingTransformDataset(torch.utils.data.Dataset):
     def __init__(self, image_paths):
         self.images = image_paths
@@ -47,7 +47,7 @@ class ImageLoadingTransformDataset(torch.utils.data.Dataset):
             # convert to tensor temporarily so dataloader will accept it
             tensor = IMAGE_TRANSFORM(image)
         except Exception as e:
-            print(f"Could not load image path / 画像を読み込めません: {img_path}, error: {e}")
+            print(f"Could not load image path / 我看不懂图像: {img_path}, error: {e}")
             return None
 
         return (tensor, img_path)
@@ -88,7 +88,7 @@ def main(args):
     model = model.to(DEVICE)
     print("BLIP loaded")
 
-    # captioningする
+    # captioning做
     def run_batch(path_imgs):
         imgs = torch.stack([im for _, im in path_imgs]).to(DEVICE)
 
@@ -108,7 +108,7 @@ def main(args):
                 if args.debug:
                     print(image_path, caption)
 
-    # 読み込みの高速化のためにDataLoaderを使うオプション
+    # 加快阅读DataLoaderを使うオプション
     if args.max_data_loader_n_workers is not None:
         dataset = ImageLoadingTransformDataset(image_paths)
         data = torch.utils.data.DataLoader(
@@ -136,7 +136,7 @@ def main(args):
                         raw_image = raw_image.convert("RGB")
                     img_tensor = IMAGE_TRANSFORM(raw_image)
                 except Exception as e:
-                    print(f"Could not load image path / 画像を読み込めません: {image_path}, error: {e}")
+                    print(f"Could not load image path / 我看不懂图像: {image_path}, error: {e}")
                     continue
 
             b_imgs.append((image_path, img_tensor))
@@ -156,7 +156,7 @@ def setup_parser() -> argparse.ArgumentParser:
         "--caption_weights",
         type=str,
         default="https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_large_caption.pth",
-        help="BLIP caption weights (model_large_caption.pth) / BLIP captionの重みファイル(model_large_caption.pth)",
+        help="BLIP caption weights (model_large_caption.pth) / BLIP caption重量文件(model_large_caption.pth)",
     )
     parser.add_argument(
         "--caption_extention",
@@ -175,15 +175,15 @@ def setup_parser() -> argparse.ArgumentParser:
         "--max_data_loader_n_workers",
         type=int,
         default=None,
-        help="enable image reading by DataLoader with this number of workers (faster) / DataLoaderによる画像読み込みを有効にしてこのワーカー数を適用する（読み込みを高速化）",
+        help="enable image reading by DataLoader with this number of workers (faster) / DataLoaderによる画像読み込みを有効にしてこのワーカー数を適用做（読み込みを高速化）",
     )
     parser.add_argument("--num_beams", type=int, default=1, help="num of beams in beam search /beam search時のビーム数（多いと精度が上がるが時間がかかる）")
     parser.add_argument("--top_p", type=float, default=0.9, help="top_p in Nucleus sampling / Nucleus sampling時のtop_p")
     parser.add_argument("--max_length", type=int, default=75, help="max length of caption / captionの最大長")
     parser.add_argument("--min_length", type=int, default=5, help="min length of caption / captionの最小長")
-    parser.add_argument("--seed", default=42, type=int, help="seed for reproducibility / 再現性を確保するための乱数seed")
+    parser.add_argument("--seed", default=42, type=int, help="seed for reproducibility / 再現性を確保做ための乱数seed")
     parser.add_argument("--debug", action="store_true", help="debug mode")
-    parser.add_argument("--recursive", action="store_true", help="search for images in subfolders recursively / サブフォルダを再帰的に検索する")
+    parser.add_argument("--recursive", action="store_true", help="search for images in subfolders recursively / サブフォルダを再帰的に検索做")
 
     return parser
 
@@ -193,7 +193,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # スペルミスしていたオプションを復元する
+    # スペルミスしていたオプションを復元做
     if args.caption_extention is not None:
         args.caption_extension = args.caption_extention
 

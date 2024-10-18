@@ -30,8 +30,8 @@ from diffusers.models.vae import DecoderOutput, Encoder, AutoencoderKLOutput, Di
 
 def slice_h(x, num_slices):
     # slice with pad 1 both sides: to eliminate side effect of padding of conv2d
-    # Conv2dのpaddingの副作用を排除するために、両側にpad 1しながらHをスライスする
-    # NCHWでもNHWCでもどちらでも動く
+    # Conv2d的padding的副作用を排除するために、両側にpad 1しな但らHをスライスする
+    # NCHW但NHWC但どちら但動く
     size = (x.shape[2] + num_slices - 1) // num_slices
     sliced = []
     for i in range(num_slices):
@@ -39,7 +39,7 @@ def slice_h(x, num_slices):
             sliced.append(x[:, :, : size + 1, :])
         else:
             end = size * (i + 1) + 1
-            if x.shape[2] - end < 3:  # if the last slice is too small, use the rest of the tensor 最後が細すぎるとconv2dできないので全部使う
+            if x.shape[2] - end < 3:  # if the last slice is too small, use the rest of the tensor 如果最后一个太薄conv2dできない的で全部使う
                 end = x.shape[2]
             sliced.append(x[:, :, size * i - 1 : end, :])
             if end >= x.shape[2]:
@@ -48,7 +48,7 @@ def slice_h(x, num_slices):
 
 
 def cat_h(sliced):
-    # padding分を除いて結合する
+    # padding债券除了几分钟
     cat = []
     for i, x in enumerate(sliced):
         if i == 0:
@@ -73,17 +73,17 @@ def resblock_forward(_self, num_slices, input_tensor, temb):
     _self.norm1.to(cpu_device)
     _self.norm2.to(cpu_device)
 
-    # GroupNormがCPUでfp16で動かない対策
+    # GroupNorm但CPUでfp16で動かない対策
     org_dtype = input_tensor.dtype
     if org_dtype == torch.float16:
         _self.norm1.to(torch.float32)
         _self.norm2.to(torch.float32)
 
-    # すべてのテンソルをCPUに移動する
+    # すべて的テンソルをCPUに移動する
     input_tensor = input_tensor.to(cpu_device)
     hidden_states = input_tensor
 
-    # どうもこれは結果が異なるようだ……
+    # どうもこれは結果但異なるようだ……
     # def sliced_norm1(norm, x):
     #     num_div = 4 if up_block_idx <= 2 else x.shape[1] // norm.num_groups
     #     sliced_tensor = torch.chunk(x, num_div, dim=1)
@@ -98,7 +98,7 @@ def resblock_forward(_self, num_slices, input_tensor, temb):
     #     x = torch.cat(normed_tensor, dim=1)
     #     return num_div, x
 
-    # normを分割すると結果が変わるので、ここだけは分割しない。GPUで計算するとVRAMが足りなくなるので、CPUで計算する。幸いCPUでもそこまで遅くない
+    # normを分割すると結果但変わる的で、ここだけは分割しない。GPUで計算するとVRAM但足りなくなる的で、CPUで計算する。幸いCPU但そこまで遅くない
     if org_dtype == torch.float16:
         hidden_states = hidden_states.to(torch.float32)
     hidden_states = _self.norm1(hidden_states)  # run on cpu
@@ -112,7 +112,7 @@ def resblock_forward(_self, num_slices, input_tensor, temb):
         x = sliced[i]
         sliced[i] = None
 
-        # 計算する部分だけGPUに移動する、以下同様
+        # 只有要计算的零件GPUに移動する、以下同様
         x = x.to(org_device)
         x = _self.nonlinearity(x)
         x = _self.conv1(x)
@@ -149,7 +149,7 @@ def resblock_forward(_self, num_slices, input_tensor, temb):
 
     # make shortcut
     if _self.conv_shortcut is not None:
-        sliced = list(torch.chunk(input_tensor, num_slices, dim=2))  # no padding in conv_shortcut パディングがないので普通にスライスする
+        sliced = list(torch.chunk(input_tensor, num_slices, dim=2))  # no padding in conv_shortcut パディング但ない的で普通にスライスする
         del input_tensor
 
         for i in range(len(sliced)):
@@ -167,7 +167,7 @@ def resblock_forward(_self, num_slices, input_tensor, temb):
 
     output_tensor = (input_tensor + hidden_states) / _self.output_scale_factor
 
-    output_tensor = output_tensor.to(org_device)  # 次のレイヤーがGPUで計算する
+    output_tensor = output_tensor.to(org_device)  # 次的レイヤー但GPUで計算する
     return output_tensor
 
 
@@ -225,7 +225,7 @@ class SlicingEncoder(nn.Module):
             resnet_groups=norm_num_groups,
             temb_channels=None,
         )
-        self.mid_block.attentions[0].set_use_memory_efficient_attention_xformers(True)  # とりあえずDiffusersのxformersを使う
+        self.mid_block.attentions[0].set_use_memory_efficient_attention_xformers(True)  # 目前Diffusers的xformersを使う
 
         # out
         self.conv_norm_out = nn.GroupNorm(num_channels=block_out_channels[-1], num_groups=norm_num_groups, eps=1e-6)
@@ -242,7 +242,7 @@ class SlicingEncoder(nn.Module):
             return forward
 
         self.num_slices = num_slices
-        div = num_slices / (2 ** (len(self.down_blocks) - 1))  # 深い層はそこまで分割しなくていいので適宜減らす
+        div = num_slices / (2 ** (len(self.down_blocks) - 1))  # 深い層はそこまで分割しなくていい的で適宜減らす
         # print(f"initial divisor: {div}")
         if div >= 2:
             div = int(div)
@@ -297,7 +297,7 @@ class SlicingEncoder(nn.Module):
         sample = self.mid_block(sample)
 
         # post-process
-        # ここも省メモリ化したいが、恐らくそこまでメモリを食わないので省略
+        # ここも省メモリ化したい但、恐らくそこまでメモリを食わない的で省略
         sample = self.conv_norm_out(sample)
         sample = self.conv_act(sample)
         sample = self.conv_out(sample)
@@ -317,7 +317,7 @@ class SlicingEncoder(nn.Module):
         hidden_states = torch.nn.functional.pad(hidden_states, pad, mode="constant", value=0)
 
         # slice with even number because of stride 2
-        # strideが2なので偶数でスライスする
+        # stride但2な的で偶数でスライスする
         # slice with pad 1 both sides: to eliminate side effect of padding of conv2d
         size = (hidden_states.shape[2] + num_slices - 1) // num_slices
         size = size + 1 if size % 2 == 1 else size
@@ -343,7 +343,7 @@ class SlicingEncoder(nn.Module):
             x = _self.conv(x)
             x = x.to(cpu_device)
 
-            # ここだけ雰囲気が違うのはCopilotのせい
+            # ここだけ雰囲気但違う的はCopilot的せい
             if i == 0:
                 hidden_states = x
             else:
@@ -385,7 +385,7 @@ class SlicingDecoder(nn.Module):
             resnet_groups=norm_num_groups,
             temb_channels=None,
         )
-        self.mid_block.attentions[0].set_use_memory_efficient_attention_xformers(True)  # とりあえずDiffusersのxformersを使う
+        self.mid_block.attentions[0].set_use_memory_efficient_attention_xformers(True)  # 目前Diffusers的xformersを使う
 
         # up
         reversed_block_out_channels = list(reversed(block_out_channels))
@@ -462,7 +462,7 @@ class SlicingDecoder(nn.Module):
         sample = self.conv_act(sample)
 
         # conv_out with slicing because of VRAM usage
-        # conv_outはとてもVRAM使うのでスライスして対応
+        # conv_out是VRAM使う的でスライスして対応
         org_device = sample.device
         cpu_device = torch.device("cpu")
         sample = sample.to(cpu_device)
@@ -504,7 +504,7 @@ class SlicingDecoder(nn.Module):
             # Cast to float32 to as 'upsample_nearest2d_out_frame' op does not support bfloat16
             # TODO(Suraj): Remove this cast once the issue is fixed in PyTorch
             # https://github.com/pytorch/pytorch/issues/86679
-            # PyTorch 2で直らないかね……
+            # PyTorch 2我想知道它是否会解决……
             if org_dtype == torch.bfloat16:
                 x = x.to(torch.float32)
 
@@ -515,7 +515,7 @@ class SlicingDecoder(nn.Module):
 
             x = _self.conv(x)
 
-            # upsampleされてるのでpadは2になる
+            # upsampleされてる的でpadは2になる
             if i == 0:
                 x = x[:, :, :-2, :]
             elif i == num_slices - 1:
@@ -621,7 +621,7 @@ class SlicingAutoencoderKL(ModelMixin, ConfigMixin):
 
         return DecoderOutput(sample=dec)
 
-    # これはバッチ方向のスライシング　紛らわしい
+    # これはバッチ方向的スライシング　紛らわしい
     def enable_slicing(self):
         r"""
         Enable sliced VAE decoding.

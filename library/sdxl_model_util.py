@@ -12,8 +12,8 @@ from library import sdxl_original_unet
 VAE_SCALE_FACTOR = 0.13025
 MODEL_VERSION_SDXL_BASE_V0_9 = "sdxl_base_v0-9"
 
-# Diffusersの設定を読み込むための参照モデル
-DIFFUSERS_REF_MODEL_ID_SDXL = "stabilityai/stable-diffusion-xl-base-0.9"  # アクセス権が必要
+# Diffusers参考模型读取设置
+DIFFUSERS_REF_MODEL_ID_SDXL = "stabilityai/stable-diffusion-xl-base-0.9"  # 需要权利访问权
 
 DIFFUSERS_SDXL_UNET_CONFIG = {
     "act_fn": "silu",
@@ -67,8 +67,8 @@ DIFFUSERS_SDXL_UNET_CONFIG = {
 def convert_sdxl_text_encoder_2_checkpoint(checkpoint, max_length):
     SDXL_KEY_PREFIX = "conditioner.embedders.1.model."
 
-    # SD2のと、基本的には同じ。logit_scaleを後で使うので、それを追加で返す
-    # logit_scaleはcheckpointの保存時に使用する
+    # SD2和、基本的に牙齿同じ。logit_scaleを後で使うので、それを追加で返す
+    # logit_scale牙齿checkpointの保存時に使用する
     def convert_key(key):
         # common conversion
         key = key.replace(SDXL_KEY_PREFIX + "transformer.", "text_model.encoder.")
@@ -85,7 +85,7 @@ def convert_sdxl_text_encoder_2_checkpoint(checkpoint, max_length):
             elif ".attn.out_proj" in key:
                 key = key.replace(".attn.out_proj.", ".self_attn.out_proj.")
             elif ".attn.in_proj" in key:
-                key = None  # 特殊なので後で処理する
+                key = None  # 这很特别，所以以后进行处理
             else:
                 raise ValueError(f"unexpected key in SD: {key}")
         elif ".positional_embedding" in key:
@@ -93,7 +93,7 @@ def convert_sdxl_text_encoder_2_checkpoint(checkpoint, max_length):
         elif ".text_projection" in key:
             key = key.replace("text_model.text_projection", "text_projection.weight")
         elif ".logit_scale" in key:
-            key = None  # 後で処理する
+            key = None  # 稍后处理
         elif ".token_embedding" in key:
             key = key.replace(".token_embedding.weight", ".embeddings.token_embedding.weight")
         elif ".ln_final" in key:
@@ -111,10 +111,10 @@ def convert_sdxl_text_encoder_2_checkpoint(checkpoint, max_length):
             continue
         new_sd[new_key] = checkpoint[key]
 
-    # attnの変換
+    # attn转换
     for key in keys:
         if ".resblocks" in key and ".attn.in_proj_" in key:
-            # 三つに分割
+            # 分为三
             values = torch.chunk(checkpoint[key], 3)
 
             key_suffix = ".weight" if "weight" in key else ".bias"
@@ -126,11 +126,11 @@ def convert_sdxl_text_encoder_2_checkpoint(checkpoint, max_length):
             new_sd[key_pfx + "k_proj" + key_suffix] = values[1]
             new_sd[key_pfx + "v_proj" + key_suffix] = values[2]
 
-    # original SD にはないので、position_idsを追加
+    # original SD に牙齿ないので、position_idsを追加
     position_ids = torch.Tensor([list(range(max_length))]).to(torch.int64)
     new_sd["text_model.embeddings.position_ids"] = position_ids
 
-    # logit_scale はDiffusersには含まれないが、保存時に戻したいので別途返す
+    # logit_scale 牙齿Diffusersに牙齿含まれないが、保存時に戻したいので別途返す
     logit_scale = checkpoint.get(SDXL_KEY_PREFIX + "logit_scale", None)
 
     return new_sd, logit_scale
@@ -372,7 +372,7 @@ def convert_diffusers_unet_state_dict_to_sdxl(du_sd):
 def convert_unet_state_dict(src_sd, conversion_map):
     converted_sd = {}
     for src_key, value in src_sd.items():
-        # さすがに全部回すのは時間がかかるので右から要素を削りつつprefixを探す
+        # さすがに全部回すの牙齿時間がかかるので右から要素を削りつつprefixを探す
         src_key_fragments = src_key.split(".")[:-1]  # remove weight/bias
         while len(src_key_fragments) > 0:
             src_key_prefix = ".".join(src_key_fragments) + "."
@@ -396,7 +396,7 @@ def convert_sdxl_unet_state_dict_to_diffusers(sd):
 
 def convert_text_encoder_2_state_dict_to_sdxl(checkpoint, logit_scale):
     def convert_key(key):
-        # position_idsの除去
+        # position_ids移动
         if ".position_ids" in key:
             return None
 
@@ -414,7 +414,7 @@ def convert_text_encoder_2_state_dict_to_sdxl(checkpoint, logit_scale):
             elif ".self_attn.out_proj" in key:
                 key = key.replace(".self_attn.out_proj.", ".attn.out_proj.")
             elif ".self_attn." in key:
-                key = None  # 特殊なので後で処理する
+                key = None  # 这很特别，所以以后进行处理
             else:
                 raise ValueError(f"unexpected key in DiffUsers model: {key}")
         elif ".position_embedding" in key:
@@ -435,10 +435,10 @@ def convert_text_encoder_2_state_dict_to_sdxl(checkpoint, logit_scale):
             continue
         new_sd[new_key] = checkpoint[key]
 
-    # attnの変換
+    # attn转换
     for key in keys:
         if "layers" in key and "q_proj" in key:
-            # 三つを結合
+            # 结合三个
             key_q = key
             key_k = key.replace("q_proj", "k_proj")
             key_v = key.replace("q_proj", "v_proj")

@@ -32,7 +32,7 @@ from library.custom_train_functions import (
 )
 
 
-# TODO 他のスクリプトと共通化する
+# TODO 与其他脚本通用
 def generate_step_logs(args: argparse.Namespace, current_loss, avr_loss, lr_scheduler):
     logs = {
         "loss/current": current_loss,
@@ -61,7 +61,7 @@ def train(args):
 
     tokenizer = train_util.load_tokenizer(args)
 
-    # データセットを準備する
+    # 准备数据集
     blueprint_generator = BlueprintGenerator(ConfigSanitizer(False, False, True, True))
     if use_user_config:
         print(f"Load dataset config from {args.dataset_config}")
@@ -69,7 +69,7 @@ def train(args):
         ignored = ["train_data_dir", "conditioning_data_dir"]
         if any(getattr(args, attr) is not None for attr in ignored):
             print(
-                "ignore following options because config file is found: {0} / 設定ファイルが利用されるため以下のオプションは無視されます: {0}".format(
+                "ignore following options because config file is found: {0} / 設定ファイルが利用されるため以下的オプションは無視されます: {0}".format(
                     ", ".join(ignored)
                 )
             )
@@ -99,29 +99,29 @@ def train(args):
         return
     if len(train_dataset_group) == 0:
         print(
-            "No data found. Please verify arguments (train_data_dir must be the parent of folders with images) / 画像がありません。引数指定を確認してください（train_data_dirには画像があるフォルダではなく、画像があるフォルダの親フォルダを指定する必要があります）"
+            "No data found. Please verify arguments (train_data_dir must be the parent of folders with images) / 画像がありません。引数指定を確認してください（train_data_dirには画像があるフォルダではなく、画像があるフォルダ的親フォルダを指定做必要があります）"
         )
         return
 
     if cache_latents:
         assert (
             train_dataset_group.is_latent_cacheable()
-        ), "when caching latents, either color_aug or random_crop cannot be used / latentをキャッシュするときはcolor_augとrandom_cropは使えません"
+        ), "when caching latents, either color_aug or random_crop cannot be used / latentをキャッシュ做ときはcolor_augとrandom_cropは使えません"
 
-    # acceleratorを準備する
+    # accelerator准备
     print("prepare accelerator")
     accelerator = train_util.prepare_accelerator(args)
     is_main_process = accelerator.is_main_process
 
-    # mixed precisionに対応した型を用意しておき適宜castする
+    # mixed precision准备与cast做
     weight_dtype, save_dtype = train_util.prepare_dtype(args)
 
-    # モデルを読み込む
+    # 阅读模型
     text_encoder, vae, unet, _ = train_util.load_target_model(
         args, weight_dtype, accelerator, unet_use_linear_projection_in_v2=True
     )
 
-    # DiffusersのControlNetが使用するデータを準備する
+    # Diffusers的ControlNetが使用做データ准备
     if args.v2:
         unet.config = {
             "act_fn": "silu",
@@ -198,10 +198,10 @@ def train(args):
         elif os.path.isdir(filename):
             controlnet = ControlNetModel.from_pretrained(filename)
 
-    # モデルに xformers とか memory efficient attention を組み込む
+    # 模型 xformers とか memory efficient attention を組み込む
     train_util.replace_unet_modules(unet, args.mem_eff_attn, args.xformers, args.sdpa)
 
-    # 学習を準備する
+    # 学習准备
     if cache_latents:
         vae.to(accelerator.device, dtype=weight_dtype)
         vae.requires_grad_(False)
@@ -223,16 +223,16 @@ def train(args):
     if args.gradient_checkpointing:
         controlnet.enable_gradient_checkpointing()
 
-    # 学習に必要なクラスを準備する
+    # 学習に必要なクラス准备
     accelerator.print("prepare optimizer, data loader etc.")
 
     trainable_params = controlnet.parameters()
 
     _, _, optimizer = train_util.get_optimizer(args, trainable_params)
 
-    # dataloaderを準備する
-    # DataLoaderのプロセス数：0はメインプロセスになる
-    n_workers = min(args.max_data_loader_n_workers, os.cpu_count() - 1)  # cpu_count-1 ただし最大で指定された数まで
+    # dataloader准备
+    # DataLoader的プロセス数：0はメインプロセスになる
+    n_workers = min(args.max_data_loader_n_workers, os.cpu_count() - 1)  # cpu_count-1 但是，达到最大数字
 
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset_group,
@@ -243,20 +243,20 @@ def train(args):
         persistent_workers=args.persistent_data_loader_workers,
     )
 
-    # 学習ステップ数を計算する
+    # 计算学习步骤的数量
     if args.max_train_epochs is not None:
         args.max_train_steps = args.max_train_epochs * math.ceil(
             len(train_dataloader) / accelerator.num_processes / args.gradient_accumulation_steps
         )
-        accelerator.print(f"override steps. steps for {args.max_train_epochs} epochs is / 指定エポックまでのステップ数: {args.max_train_steps}")
+        accelerator.print(f"override steps. steps for {args.max_train_epochs} epochs is / 指定エポックまで的ステップ数: {args.max_train_steps}")
 
-    # データセット側にも学習ステップを送信
+    # 将学习步骤发送到数据集侧
     train_dataset_group.set_max_train_steps(args.max_train_steps)
 
-    # lr schedulerを用意する
+    # lr scheduler准备
     lr_scheduler = train_util.get_scheduler_fix(args, optimizer, accelerator.num_processes)
 
-    # 実験的機能：勾配も含めたfp16学習を行う　モデル全体をfp16にする
+    # 实验功能：勾配も含めたfp16学習を行う　モデル全体をfp16に做
     if args.full_fp16:
         assert (
             args.mixed_precision == "fp16"
@@ -264,7 +264,7 @@ def train(args):
         accelerator.print("enable full fp16 training.")
         controlnet.to(weight_dtype)
 
-    # acceleratorがなんかよろしくやってくれるらしい
+    # accelerator看来它会做这样的事情
     controlnet, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
         controlnet, optimizer, train_dataloader, lr_scheduler
     )
@@ -284,29 +284,29 @@ def train(args):
         vae.eval()
         vae.to(accelerator.device, dtype=weight_dtype)
 
-    # 実験的機能：勾配も含めたfp16学習を行う　PyTorchにパッチを当ててfp16でのgrad scaleを有効にする
+    # 实验功能：勾配も含めたfp16学習を行う　PyTorchにパッチを当ててfp16で的grad scaleを有効に做
     if args.full_fp16:
         train_util.patch_accelerator_for_fp16_training(accelerator)
 
-    # resumeする
+    # resume做
     train_util.resume_from_local_or_hf_if_specified(accelerator, args)
 
-    # epoch数を計算する
+    # epoch数を計算做
     num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
     num_train_epochs = math.ceil(args.max_train_steps / num_update_steps_per_epoch)
     if (args.save_n_epoch_ratio is not None) and (args.save_n_epoch_ratio > 0):
         args.save_every_n_epochs = math.floor(num_train_epochs / args.save_n_epoch_ratio) or 1
 
-    # 学習する
+    # 学習做
     # TODO: find a way to handle total batch size when there are multiple datasets
-    accelerator.print("running training / 学習開始")
-    accelerator.print(f"  num train images * repeats / 学習画像の数×繰り返し回数: {train_dataset_group.num_train_images}")
-    accelerator.print(f"  num reg images / 正則化画像の数: {train_dataset_group.num_reg_images}")
-    accelerator.print(f"  num batches per epoch / 1epochのバッチ数: {len(train_dataloader)}")
+    accelerator.print("running training / 学习开始")
+    accelerator.print(f"  num train images * repeats / 学習画像的数×繰り返し回数: {train_dataset_group.num_train_images}")
+    accelerator.print(f"  num reg images / 正則化画像的数: {train_dataset_group.num_reg_images}")
+    accelerator.print(f"  num batches per epoch / 1epoch的バッチ数: {len(train_dataloader)}")
     accelerator.print(f"  num epochs / epoch数: {num_train_epochs}")
     accelerator.print(f"  batch size per device / バッチサイズ: {', '.join([str(d.batch_size) for d in train_dataset_group.datasets])}")
-    # print(f"  total train batch size (with parallel & distributed & accumulation) / 総バッチサイズ（並列学習、勾配合計含む）: {total_batch_size}")
-    accelerator.print(f"  gradient accumulation steps / 勾配を合計するステップ数 = {args.gradient_accumulation_steps}")
+    # print(f"  total train batch size (with parallel & distributed & accumulation) / 总批量大小（並列学習、勾配合計含む）: {total_batch_size}")
+    accelerator.print(f"  gradient accumulation steps / 勾配を合計做ステップ数 = {args.gradient_accumulation_steps}")
     accelerator.print(f"  total optimization steps / 学習ステップ数: {args.max_train_steps}")
 
     progress_bar = tqdm(
@@ -378,7 +378,7 @@ def train(args):
                     if "latents" in batch and batch["latents"] is not None:
                         latents = batch["latents"].to(accelerator.device)
                     else:
-                        # latentに変換
+                        # latent转换
                         latents = vae.encode(batch["images"].to(dtype=weight_dtype)).latent_dist.sample()
                     latents = latents * 0.18215
                 b_size = latents.shape[0]
@@ -439,13 +439,13 @@ def train(args):
                 loss = torch.nn.functional.mse_loss(noise_pred.float(), target.float(), reduction="none")
                 loss = loss.mean([1, 2, 3])
 
-                loss_weights = batch["loss_weights"]  # 各sampleごとのweight
+                loss_weights = batch["loss_weights"]  # 每个sampleごと的weight
                 loss = loss * loss_weights
 
                 if args.min_snr_gamma:
                     loss = apply_snr_weight(loss, timesteps, noise_scheduler, args.min_snr_gamma)
 
-                loss = loss.mean()  # 平均なのでbatch_sizeで割る必要なし
+                loss = loss.mean()  # 平均な的でbatch_sizeで割る必要なし
 
                 accelerator.backward(loss)
                 if accelerator.sync_gradients and args.max_grad_norm != 0.0:
@@ -474,7 +474,7 @@ def train(args):
                     controlnet=controlnet,
                 )
 
-                # 指定ステップごとにモデルを保存
+                # 为每个指定步骤保存模型
                 if args.save_every_n_steps is not None and global_step % args.save_every_n_steps == 0:
                     accelerator.wait_for_everyone()
                     if accelerator.is_main_process:
@@ -516,7 +516,7 @@ def train(args):
 
         accelerator.wait_for_everyone()
 
-        # 指定エポックごとにモデルを保存
+        # 保存每个指定时期的模型
         if args.save_every_n_epochs is not None:
             saving = (epoch + 1) % args.save_every_n_epochs == 0 and (epoch + 1) < num_train_epochs
             if is_main_process and saving:
@@ -553,7 +553,7 @@ def train(args):
     if is_main_process and args.save_state:
         train_util.save_state_on_train_end(args, accelerator)
 
-    # del accelerator  # この後メモリを使うのでこれは消す→printで使うので消さずにおく
+    # del accelerator  # こ的後メモリを使う的でこれは消す→printで使う的で消さずにおく
 
     if is_main_process:
         ckpt_name = train_util.get_last_ckpt_name(args, "." + args.save_model_as)
@@ -577,19 +577,19 @@ def setup_parser() -> argparse.ArgumentParser:
         type=str,
         default="safetensors",
         choices=[None, "ckpt", "pt", "safetensors"],
-        help="format to save the model (default is .safetensors) / モデル保存時の形式（デフォルトはsafetensors）",
+        help="format to save the model (default is .safetensors) / モデル保存時的形式（デフォルトはsafetensors）",
     )
     parser.add_argument(
         "--controlnet_model_name_or_path",
         type=str,
         default=None,
-        help="controlnet model name or path / controlnetのモデル名またはパス",
+        help="controlnet model name or path / controlnet的モデル名またはパス",
     )
     parser.add_argument(
         "--conditioning_data_dir",
         type=str,
         default=None,
-        help="conditioning data directory / 条件付けデータのディレクトリ",
+        help="conditioning data directory / 条件付けデータ的ディレクトリ",
     )
 
     return parser

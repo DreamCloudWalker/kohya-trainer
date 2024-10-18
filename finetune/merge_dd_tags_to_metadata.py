@@ -40,7 +40,7 @@ def main(args):
     if args.debug:
       print(image_key, tags)
 
-  # metadataを書き出して終わり
+  # metadata写下并结束
   print(f"writing metadata: {args.out_json}")
   Path(args.out_json).write_text(json.dumps(metadata, indent=2), encoding='utf-8')
 

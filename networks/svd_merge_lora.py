@@ -141,7 +141,7 @@ def merge_lora_models(models, ratios, new_rank, new_conv_rank, device, merge_dty
 
 
 def merge(args):
-  assert len(args.models) == len(args.ratios), f"number of models must be equal to number of ratios / モデルの数と重みの数は合わせてください"
+  assert len(args.models) == len(args.ratios), f"number of models must be equal to number of ratios / 请匹配型号的数量和权重的数量"
 
   def str_to_dtype(p):
     if p == 'float':

@@ -58,13 +58,13 @@ SCHEDULER_LINEAR_END = 0.0120
 SCHEDULER_TIMESTEPS = 1000
 SCHEDLER_SCHEDULE = "scaled_linear"
 
-# その他の設定
+# 其他设置
 LATENT_CHANNELS = 4
 DOWNSAMPLING_FACTOR = 8
 
-# region モジュール入れ替え部
+# region 模块更换部分
 """
-高速化のためのモジュール入れ替え
+高速化的ため的モジュール入れ替え
 """
 
 
@@ -72,14 +72,14 @@ def replace_unet_modules(unet: diffusers.models.unet_2d_condition.UNet2DConditio
     if mem_eff_attn:
         print("Enable memory efficient attention for U-Net")
 
-        # これはDiffusersのU-Netではなく自前のU-Netなので置き換えなくても良い
+        # 这是Diffusers的U-Netで牙齿なく自前的U-Netな的で置き換えなくても良い
         unet.set_use_memory_efficient_attention(False, True)
     elif xformers:
         print("Enable xformers for U-Net")
         try:
             import xformers.ops
         except ImportError:
-            raise ImportError("No xformers / xformersがインストールされていないようです")
+            raise ImportError("No xformers / xformers但インストールされていないようです")
 
         unet.set_use_memory_efficient_attention(True, False)
     elif sdpa:
@@ -93,8 +93,8 @@ def replace_vae_modules(vae: diffusers.models.AutoencoderKL, mem_eff_attn, xform
     if mem_eff_attn:
         replace_vae_attn_to_memory_efficient()
     elif xformers:
-        # replace_vae_attn_to_xformers() # 解像度によってxformersがエラーを出す？
-        vae.set_use_memory_efficient_attention_xformers(True) # とりあえずこっちを使う
+        # replace_vae_attn_to_xformers() # 通过解决方案xformers但エラー的出す？
+        vae.set_use_memory_efficient_attention_xformers(True) # 目前，请使用此
     elif sdpa:
         replace_vae_attn_to_sdpa()
 
@@ -267,9 +267,9 @@ def replace_vae_attn_to_sdpa():
 
 # endregion
 
-# region 画像生成の本体：lpw_stable_diffusion.py （ASL）からコピーして修正
+# region 图像生成主体：lpw_stable_diffusion.py （ASL）からコピーして修正
 # https://github.com/huggingface/diffusers/blob/main/examples/community/lpw_stable_diffusion.py
-# Pipelineだけ独立して使えないのと機能追加するのとでコピーして修正
+# Pipeline通过添加一个函数以无法独立使用来复制和修复它
 
 
 class PipelineLike:
@@ -328,7 +328,7 @@ class PipelineLike:
 
         # ControlNet # not supported yet
         self.control_nets: List[ControlNetInfo] = []
-        self.control_net_enabled = True  # control_netsが空ならTrueでもFalseでもControlNetは動作しない
+        self.control_net_enabled = True  # control_nets如果是空的TrueでもFalseでもControlNet牙齿動作しない
 
     # Textual Inversion
     def add_token_replacement(self, text_encoder_index, target_token_id, rep_token_ids):
@@ -470,7 +470,7 @@ class PipelineLike:
             if negative_scale is not None:
                 _, real_uncond_embeddings, _ = get_weighted_text_embeddings(
                     token_replacer,
-                    prompt=prompt,  # こちらのトークン長に合わせてuncondを作るので75トークン超で必須
+                    prompt=prompt,  # 根据这个令牌长度uncond的作る的で75トークン超で必須
                     uncond_prompt=[""] * batch_size,
                     max_embeddings_multiples=max_embeddings_multiples,
                     clip_skip=self.clip_skip,
@@ -497,8 +497,8 @@ class PipelineLike:
             if isinstance(clip_guide_images, PIL.Image.Image):
                 clip_guide_images = [clip_guide_images]
 
-                # ControlNetのhintにguide imageを流用する
-                # 前処理はControlNet側で行う
+                # ControlNet的hintにguide image的流用する
+                # 准备ControlNet側で行う
 
         # create size embs
         if original_height is None:
@@ -866,7 +866,7 @@ def get_prompts_with_weights(tokenizer: CLIPTokenizer, token_replacer, prompt: L
                 pad_len = tokenizer.model_max_length - (len(text_token) % tokenizer.model_max_length)
                 print(f"BREAK pad_len: {pad_len}")
                 for i in range(pad_len):
-                    # v2のときEOSをつけるべきかどうかわからないぜ
+                    # v2的ときEOS的つけるべきかどうかわからないぜ
                     # if i == 0:
                     #     text_token.append(tokenizer.eos_token_id)
                     # else:
@@ -950,9 +950,9 @@ def get_unweighted_text_embeddings(
                 text_input_chunk[:, -1] = text_input[0, -1]
             else:  # v2
                 for j in range(len(text_input_chunk)):
-                    if text_input_chunk[j, -1] != eos and text_input_chunk[j, -1] != pad:  # 最後に普通の文字がある
+                    if text_input_chunk[j, -1] != eos and text_input_chunk[j, -1] != pad:  # 最後に普通的文字但ある
                         text_input_chunk[j, -1] = eos
-                    if text_input_chunk[j, 1] == pad:  # BOSだけであとはPAD
+                    if text_input_chunk[j, 1] == pad:  # BOS仅有的PAD
                         text_input_chunk[j, 1] = eos
 
             # -2 is same for Text Encoder 1 and 2
@@ -1085,7 +1085,7 @@ def get_weighted_text_embeddings(
 
     # assign weights to the prompts and normalize in the sense of mean
     # TODO: should we normalize by chunk or in a whole (current implementation)?
-    # →全体でいいんじゃないかな
+    # →我想知道整体是否还好
     if (not skip_parsing) and (not skip_weighting):
         previous_mean = text_embeddings.float().mean(axis=[-2, -1]).to(text_embeddings.dtype)
         text_embeddings *= prompt_weights.unsqueeze(-1)
@@ -1239,7 +1239,7 @@ def handle_dynamic_prompt_variants(prompt, repeat_count):
 
 
 class BatchDataBase(NamedTuple):
-    # バッチ分割が必要ないデータ
+    # 不需要批处理的数据
     step: int
     prompt: str
     negative_prompt: str
@@ -1251,7 +1251,7 @@ class BatchDataBase(NamedTuple):
 
 
 class BatchDataExt(NamedTuple):
-    # バッチ分割が必要なデータ
+    # 需要批次拆分的数据
     width: int
     height: int
     original_width: int
@@ -1281,10 +1281,10 @@ def main(args):
         dtype = torch.float32
 
     highres_fix = args.highres_fix_scale is not None
-    # assert not highres_fix or args.image_path is None, f"highres_fix doesn't work with img2img / highres_fixはimg2imgと同時に使えません"
+    # assert not highres_fix or args.image_path is None, f"highres_fix doesn't work with img2img / highres_fix牙齿img2imgと同時に使えません"
 
-    # モデルを読み込む
-    if not os.path.isfile(args.ckpt):  # ファイルがないならパターンで探し、一つだけ該当すればそれを使う
+    # 阅读模型
+    if not os.path.isfile(args.ckpt):  # 如果您没有文件，请以模式查找、一つだけ該当すればそれ的使う
         files = glob.glob(args.ckpt)
         if len(files) == 1:
             args.ckpt = files[0]
@@ -1293,23 +1293,23 @@ def main(args):
         args.ckpt, args.vae, sdxl_model_util.MODEL_VERSION_SDXL_BASE_V0_9, dtype
     )
 
-    # xformers、Hypernetwork対応
+    # xformers、Hypernetwork一致
     if not args.diffusers_xformers:
         mem_eff = not (args.xformers or args.sdpa)
         replace_unet_modules(unet, mem_eff, args.xformers, args.sdpa)
         replace_vae_modules(vae, mem_eff, args.xformers, args.sdpa)
 
-    # tokenizerを読み込む
+    # tokenizer插入
     print("loading tokenizer")
     tokenizer1, tokenizer2 = sdxl_train_util.load_tokenizers(args)
 
-    # schedulerを用意する
+    # scheduler准备
     sched_init_args = {}
     scheduler_num_noises_per_step = 1
     if args.sampler == "ddim":
         scheduler_cls = DDIMScheduler
         scheduler_module = diffusers.schedulers.scheduling_ddim
-    elif args.sampler == "ddpm":  # ddpmはおかしくなるのでoptionから外してある
+    elif args.sampler == "ddpm":  # ddpm牙齿おかしくなる的でoptionから外してある
         scheduler_cls = DDPMScheduler
         scheduler_module = diffusers.schedulers.scheduling_ddpm
     elif args.sampler == "pndm":
@@ -1342,7 +1342,7 @@ def main(args):
         scheduler_module = diffusers.schedulers.scheduling_k_dpm_2_ancestral_discrete
         scheduler_num_noises_per_step = 2
 
-    # samplerの乱数をあらかじめ指定するための処理
+    # sampler的乱数的あらかじめ指定するため的処理
 
     # replace randn
     class NoiseManager:
@@ -1393,15 +1393,15 @@ def main(args):
         **sched_init_args,
     )
 
-    # clip_sample=Trueにする
+    # clip_sample=True是
     if hasattr(scheduler.config, "clip_sample") and scheduler.config.clip_sample is False:
         print("set clip_sample to True")
         scheduler.config.clip_sample = True
 
-    # deviceを決定する
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # "mps"を考量してない
+    # device确定
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # "mps"我不认为
 
-    # custom pipelineをコピったやつを生成する
+    # custom pipeline生成复制的
     if args.vae_slices:
         from library.slicing_vae import SlicingAutoencoderKL
 
@@ -1418,7 +1418,7 @@ def main(args):
             up_block_types=["UpDecoderBlock2D", "UpDecoderBlock2D", "UpDecoderBlock2D", "UpDecoderBlock2D"],
             num_slices=args.vae_slices,
         )
-        sli_vae.load_state_dict(vae.state_dict())  # vaeのパラメータをコピーする
+        sli_vae.load_state_dict(vae.state_dict())  # vae的パラメータ的コピーする
         vae = sli_vae
         del sli_vae
 
@@ -1432,7 +1432,7 @@ def main(args):
     text_encoder2.to(dtype).to(device)
     unet.to(dtype).to(device)
 
-    # networkを組み込む
+    # network包含
     if args.network_module:
         networks = []
         network_default_muls = []
@@ -1480,7 +1480,7 @@ def main(args):
 
             if not args.network_merge or not mergeable:
                 network.apply_to([text_encoder1, text_encoder2], unet)
-                info = network.load_state_dict(weights_sd, False)  # network.load_weightsを使うようにするとよい
+                info = network.load_state_dict(weights_sd, False)  # network.load_weights的使うよう是とよい
                 print(f"weights are loaded: {info}")
 
                 if args.opt_channels_last:
@@ -1498,7 +1498,7 @@ def main(args):
     else:
         networks = []
 
-    # upscalerの指定があれば取得する
+    # upscaler的指定但あれば取得する
     upscaler = None
     if args.highres_fix_upscaler:
         print("import upscaler module:", args.highres_fix_upscaler)
@@ -1514,7 +1514,7 @@ def main(args):
         upscaler = imported_module.create_upscaler(**us_kwargs)
         upscaler.to(dtype).to(device)
 
-    # ControlNetの処理
+    # ControlNet的処理
     control_nets: List[ControlNetInfo] = []
     if args.control_net_models:
         for i, model in enumerate(args.control_net_models):
@@ -1555,7 +1555,7 @@ def main(args):
     if args.diffusers_xformers:
         pipe.enable_xformers_memory_efficient_attention()
 
-    #  Textual Inversionを処理する
+    #  Textual Inversion过程
     if args.textual_inversion_embeddings:
         token_ids_embeds1 = []
         token_ids_embeds2 = []
@@ -1583,7 +1583,7 @@ def main(args):
             num_added_tokens2 = tokenizer2.add_tokens(token_strings)
             assert num_added_tokens1 == num_vectors_per_token and num_added_tokens2 == num_vectors_per_token, (
                 f"tokenizer has same word to token string (filename): {embeds_file}"
-                + f" / 指定した名前（ファイル名）のトークンが既に存在します: {embeds_file}"
+                + f" / 指定名称（ファイル名）的トークン但既に存在します: {embeds_file}"
             )
 
             token_ids1 = tokenizer1.convert_tokens_to_ids(token_strings)
@@ -1616,7 +1616,7 @@ def main(args):
             for token_id, embed in zip(token_ids, embeds):
                 token_embeds2[token_id] = embed
 
-    # promptを取得する
+    # prompt得到
     if args.from_file is not None:
         print(f"reading prompts from {args.from_file}")
         with open(args.from_file, "r", encoding="utf-8") as f:
@@ -1630,7 +1630,7 @@ def main(args):
     if args.interactive:
         args.n_iter = 1
 
-    # img2imgの前処理、画像の読み込みなど
+    # img2img的前処理、画像的読み込みなど
     def load_images(path):
         if os.path.isfile(path):
             paths = [path]
@@ -1657,7 +1657,7 @@ def main(args):
         resized = []
         for img in imgs:
             r_img = img.resize(size, Image.Resampling.LANCZOS)
-            if hasattr(img, "filename"):  # filename属性がない場合があるらしい
+            if hasattr(img, "filename"):  # filename似乎没有属性
                 r_img.filename = img.filename
             resized.append(r_img)
         return resized
@@ -1665,7 +1665,7 @@ def main(args):
     if args.image_path is not None:
         print(f"load image for img2img: {args.image_path}")
         init_images = load_images(args.image_path)
-        assert len(init_images) > 0, f"No image / 画像がありません: {args.image_path}"
+        assert len(init_images) > 0, f"No image / 画像但ありません: {args.image_path}"
         print(f"loaded {len(init_images)} images for img2img")
     else:
         init_images = None
@@ -1673,12 +1673,12 @@ def main(args):
     if args.mask_path is not None:
         print(f"load mask for inpainting: {args.mask_path}")
         mask_images = load_images(args.mask_path)
-        assert len(mask_images) > 0, f"No mask image / マスク画像がありません: {args.image_path}"
+        assert len(mask_images) > 0, f"No mask image / マスク画像但ありません: {args.image_path}"
         print(f"loaded {len(mask_images)} mask images for inpainting")
     else:
         mask_images = None
 
-    # promptがないとき、画像のPngInfoから取得する
+    # prompt当没有、画像的PngInfoから取得する
     if init_images is not None and len(prompt_list) == 0 and not args.interactive:
         print("get prompts from images' meta data")
         for img in init_images:
@@ -1688,7 +1688,7 @@ def main(args):
                     prompt += " --n " + img.text["negative-prompt"]
                 prompt_list.append(prompt)
 
-        # プロンプトと画像を一致させるため指定回数だけ繰り返す（画像を増幅する）
+        # 仅重复指定的次数以匹配提示和图像（图像増幅する）
         l = []
         for im in init_images:
             l.extend([im] * args.images_per_prompt)
@@ -1700,9 +1700,9 @@ def main(args):
                 l.extend([im] * args.images_per_prompt)
             mask_images = l
 
-    # 画像サイズにオプション指定があるときはリサイズする
+    # 画像サイズにオプション指定但あるとき牙齿リサイズする
     if args.W is not None and args.H is not None:
-        # highres fix を考慮に入れる
+        # highres fix 变成考虑
         w, h = args.W, args.H
         if highres_fix:
             w = int(w * args.highres_fix_scale + 0.5)
@@ -1717,7 +1717,7 @@ def main(args):
 
     regional_network = False
     if networks and mask_images:
-        # mask を領域情報として流用する、現在は一回のコマンド呼び出しで1枚だけ対応
+        # mask 被转移为区域信息、現在牙齿一回的コマンド呼び出しで1枚だけ一致
         regional_network = True
         print("use mask as region")
 
@@ -1742,14 +1742,14 @@ def main(args):
 
         print(f"loaded {len(guide_images)} guide images for guidance")
         if len(guide_images) == 0:
-            print(f"No guide image, use previous generated image. / ガイド画像がありません。直前に生成した画像を使います: {args.image_path}")
+            print(f"No guide image, use previous generated image. / 没有指南图像。直前に生成した图像使います: {args.image_path}")
             guide_images = None
     else:
         guide_images = None
 
-    # seed指定時はseedを決めておく
+    # seed指定時牙齿seed的決めておく
     if args.seed is not None:
-        # dynamic promptを使うと足りなくなる→images_per_promptを適当に大きくしておいてもらう
+        # dynamic prompt如果您使用它→images_per_prompt的適当に大きくしておいてもらう
         random.seed(args.seed)
         predefined_seeds = [random.randint(0, 0x7FFFFFFF) for _ in range(args.n_iter * len(prompt_list) * args.images_per_prompt)]
         if len(predefined_seeds) == 1:
@@ -1757,13 +1757,13 @@ def main(args):
     else:
         predefined_seeds = None
 
-    # デフォルト画像サイズを設定する：img2imgではこれらの値は無視される（またはW*Hにリサイズ済み）
+    # 设置默认图像大小：img2imgで牙齿これら的値牙齿無視される（また牙齿W*Hにリサイズ済み）
     if args.W is None:
         args.W = 1024
     if args.H is None:
         args.H = 1024
 
-    # 画像生成のループ
+    # 画像生成的ループ
     os.makedirs(args.outdir, exist_ok=True)
     max_embeddings_multiples = 1 if args.max_embeddings_multiples is None else args.max_embeddings_multiples
 
@@ -1771,13 +1771,13 @@ def main(args):
         print(f"iteration {gen_iter+1}/{args.n_iter}")
         iter_seed = random.randint(0, 0x7FFFFFFF)
 
-        # バッチ処理の関数
+        # バッチ処理的関数
         def process_batch(batch: List[BatchData], highres_fix, highres_1st=False):
             batch_size = len(batch)
 
-            # highres_fixの処理
+            # highres_fix的処理
             if highres_fix and not highres_1st:
-                # 1st stageのバッチを作成して呼び出す：サイズを小さくして呼び出す
+                # 1st stage的バッチ的作成して呼び出す：サイズ的小さくして呼び出す
                 is_1st_latent = upscaler.support_latents() if upscaler else args.highres_fix_latents_upscaling
 
                 print("process 1st stage")
@@ -1817,19 +1817,19 @@ def main(args):
                     )
                     batch_1st.append(BatchData(is_1st_latent, base, ext_1st))
 
-                pipe.set_enable_control_net(True)  # 1st stageではControlNetを有効にする
+                pipe.set_enable_control_net(True)  # 1st stageで牙齿ControlNet的有効是
                 images_1st = process_batch(batch_1st, True, True)
 
-                # 2nd stageのバッチを作成して以下処理する
+                # 2nd stage的バッチ的作成して以下処理する
                 print("process 2nd stage")
                 width_2nd, height_2nd = batch[0].ext.width, batch[0].ext.height
 
                 if upscaler:
-                    # upscalerを使って画像を拡大する
+                    # upscaler使用
                     lowreso_imgs = None if is_1st_latent else images_1st
                     lowreso_latents = None if not is_1st_latent else images_1st
 
-                    # 戻り値はPIL.Image.Imageかtorch.Tensorのlatents
+                    # 戻り値牙齿PIL.Image.Imageかtorch.Tensor的latents
                     batch_size = len(images_1st)
                     vae_batch_size = (
                         batch_size
@@ -1842,17 +1842,17 @@ def main(args):
                     )
 
                 elif args.highres_fix_latents_upscaling:
-                    # latentを拡大する
+                    # latent放大
                     org_dtype = images_1st.dtype
                     if images_1st.dtype == torch.bfloat16:
-                        images_1st = images_1st.to(torch.float)  # interpolateがbf16をサポートしていない
+                        images_1st = images_1st.to(torch.float)  # interpolate但bf16的サポートしていない
                     images_1st = torch.nn.functional.interpolate(
                         images_1st, (batch[0].ext.height // 8, batch[0].ext.width // 8), mode="bilinear"
                     )  # , antialias=True)
                     images_1st = images_1st.to(org_dtype)
 
                 else:
-                    # 画像をLANCZOSで拡大する
+                    # 图像LANCZOSで拡大する
                     images_1st = [image.resize((width_2nd, height_2nd), resample=PIL.Image.LANCZOS) for image in images_1st]
 
                 batch_2nd = []
@@ -1862,9 +1862,9 @@ def main(args):
                 batch = batch_2nd
 
                 if args.highres_fix_disable_control_net:
-                    pipe.set_enable_control_net(False)  # オプション指定時、2nd stageではControlNetを無効にする
+                    pipe.set_enable_control_net(False)  # 当可选规范时、2nd stageで牙齿ControlNet的無効是
 
-            # このバッチの情報を取り出す
+            # こ的バッチ的情報的取り出す
             (
                 return_latents,
                 (step_first, _, _, _, init_image, mask_image, _, guide_image),
@@ -1913,7 +1913,7 @@ def main(args):
             else:
                 guide_images = None
 
-            # バッチ内の位置に関わらず同じ乱数を使うためにここで乱数を生成しておく。あわせてimage/maskがbatch内で同一かチェックする
+            # バッチ内的位置に関わらず同じ乱数的使うためにここで乱数的生成しておく。あわせてimage/mask但batch内で同一かチェックする
             all_images_are_same = True
             all_masks_are_same = True
             all_guide_images_are_same = True
@@ -1955,7 +1955,7 @@ def main(args):
 
             noise_manager.reset_sampler_noises(noises)
 
-            # すべての画像が同じなら1枚だけpipeに渡すことでpipe側で処理を高速化する
+            # すべて的画像但同じなら1枚だけpipeに渡すことでpipe側で処理的高速化する
             if init_images is not None and all_images_are_same:
                 init_images = init_images[0]
             if mask_images is not None and all_masks_are_same:
@@ -1963,9 +1963,9 @@ def main(args):
             if guide_images is not None and all_guide_images_are_same:
                 guide_images = guide_images[0]
 
-            # ControlNet使用時はguide imageをリサイズする
+            # ControlNet使用時牙齿guide image的リサイズする
             if control_nets:
-                # TODO resampleのメソッド
+                # TODO resample的メソッド
                 guide_images = guide_images if type(guide_images) == list else [guide_images]
                 guide_images = [i.resize((width, height), resample=PIL.Image.LANCZOS) for i in guide_images]
                 if len(guide_images) == 1:
@@ -1973,7 +1973,7 @@ def main(args):
 
             # generate
             if networks:
-                # 追加ネットワークの処理
+                # 追加ネットワーク的処理
                 shared = {}
                 for n, m in zip(networks, network_muls if network_muls else network_default_muls):
                     n.set_multiplier(m)
@@ -2056,15 +2056,15 @@ def main(args):
                     import cv2
 
                     for prompt, image in zip(prompts, images):
-                        cv2.imshow(prompt[:128], np.array(image)[:, :, ::-1])  # プロンプトが長いと死ぬ
+                        cv2.imshow(prompt[:128], np.array(image)[:, :, ::-1])  # プロンプト但長いと死ぬ
                         cv2.waitKey()
                         cv2.destroyAllWindows()
                 except ImportError:
-                    print("opencv-python is not installed, cannot preview / opencv-pythonがインストールされていないためプレビューできません")
+                    print("opencv-python is not installed, cannot preview / opencv-python但インストールされていないためプレビューできません")
 
             return images
 
-        # 画像生成のプロンプトが一周するまでのループ
+        # 画像生成的プロンプト但一周するまで的ループ
         prompt_index = 0
         global_step = 0
         batch_data = []
@@ -2207,12 +2207,12 @@ def main(args):
                                 continue
 
                         except ValueError as ex:
-                            print(f"Exception in parsing / 解析エラー: {parg}")
+                            print(f"Exception in parsing / 分析错误: {parg}")
                             print(ex)
 
                 # prepare seed
                 if seeds is not None:  # given in prompt
-                    # 数が足りないなら前のをそのまま使う
+                    # 数但足りないなら前的的そ的まま使う
                     if len(seeds) > 0:
                         seed = seeds.pop(0)
                 else:
@@ -2225,7 +2225,7 @@ def main(args):
                     elif args.iter_same_seed:
                         seeds = iter_seed
                     else:
-                        seed = None  # 前のを消す
+                        seed = None  # 前的的消す
 
                 if seed is None:
                     seed = random.randint(0, 0x7FFFFFFF)
@@ -2235,26 +2235,26 @@ def main(args):
                 # prepare init image, guide image and mask
                 init_image = mask_image = guide_image = None
 
-                # 同一イメージを使うとき、本当はlatentに変換しておくと無駄がないが面倒なのでとりあえず毎回処理する
+                # 使用同一图像时、本当牙齿latentに変換しておくと無駄但ない但面倒な的でとりあえず毎回処理する
                 if init_images is not None:
                     init_image = init_images[global_step % len(init_images)]
 
-                    # img2imgの場合は、基本的に元画像のサイズで生成する。highres fixの場合はargs.W, args.Hとscaleに従いリサイズ済みなので無視する
-                    # 32単位に丸めたやつにresizeされるので踏襲する
+                    # img2img的場合牙齿、基本的に元画像的サイズで生成する。highres fix的場合牙齿args.W, args.Hとscaleに従いリサイズ済みな的で無視する
+                    # 32对于那些以单位滚动的人resizeされる的で踏襲する
                     if not highres_fix:
                         width, height = init_image.size
                         width = width - width % 32
                         height = height - height % 32
                         if width != init_image.size[0] or height != init_image.size[1]:
                             print(
-                                f"img2img image size is not divisible by 32 so aspect ratio is changed / img2imgの画像サイズが32で割り切れないためリサイズされます。画像が歪みます"
+                                f"img2img image size is not divisible by 32 so aspect ratio is changed / img2img的画像サイズ但32で割り切れないためリサイズされます。画像但歪みます"
                             )
 
                 if mask_images is not None:
                     mask_image = mask_images[global_step % len(mask_images)]
 
                 if guide_images is not None:
-                    if control_nets:  # 複数件の場合あり
+                    if control_nets:  # 複数件的場合あり
                         c = len(control_nets)
                         p = global_step % (len(guide_images) // c)
                         guide_image = guide_images[p * c : p * c + c]
@@ -2287,7 +2287,7 @@ def main(args):
                         num_sub_prompts,
                     ),
                 )
-                if len(batch_data) > 0 and batch_data[-1].ext != b1.ext:  # バッチ分割必要？
+                if len(batch_data) > 0 and batch_data[-1].ext != b1.ext:  # 批处理需要？
                     process_batch(batch_data, highres_fix)
                     batch_data.clear()
 
@@ -2312,53 +2312,53 @@ def setup_parser() -> argparse.ArgumentParser:
 
     parser.add_argument("--prompt", type=str, default=None, help="prompt / プロンプト")
     parser.add_argument(
-        "--from_file", type=str, default=None, help="if specified, load prompts from this file / 指定時はプロンプトをファイルから読み込む"
+        "--from_file", type=str, default=None, help="if specified, load prompts from this file / 指定時牙齿プロンプト的ファイルから読み込む"
     )
     parser.add_argument(
-        "--interactive", action="store_true", help="interactive mode (generates one image) / 対話モード（生成される画像は1枚になります）"
+        "--interactive", action="store_true", help="interactive mode (generates one image) / 対話モード（生成される画像牙齿1枚になります）"
     )
     parser.add_argument(
-        "--no_preview", action="store_true", help="do not show generated image in interactive mode / 対話モードで画像を表示しない"
+        "--no_preview", action="store_true", help="do not show generated image in interactive mode / 対話モードで图像表示しない"
     )
     parser.add_argument(
-        "--image_path", type=str, default=None, help="image to inpaint or to generate from / img2imgまたはinpaintを行う元画像"
+        "--image_path", type=str, default=None, help="image to inpaint or to generate from / img2imgまた牙齿inpaint的行う元画像"
     )
-    parser.add_argument("--mask_path", type=str, default=None, help="mask in inpainting / inpaint時のマスク")
-    parser.add_argument("--strength", type=float, default=None, help="img2img strength / img2img時のstrength")
-    parser.add_argument("--images_per_prompt", type=int, default=1, help="number of images per prompt / プロンプトあたりの出力枚数")
-    parser.add_argument("--outdir", type=str, default="outputs", help="dir to write results to / 生成画像の出力先")
-    parser.add_argument("--sequential_file_name", action="store_true", help="sequential output file name / 生成画像のファイル名を連番にする")
+    parser.add_argument("--mask_path", type=str, default=None, help="mask in inpainting / inpaint時的マスク")
+    parser.add_argument("--strength", type=float, default=None, help="img2img strength / img2img時的strength")
+    parser.add_argument("--images_per_prompt", type=int, default=1, help="number of images per prompt / プロンプトあたり的出力枚数")
+    parser.add_argument("--outdir", type=str, default="outputs", help="dir to write results to / 生成画像的出力先")
+    parser.add_argument("--sequential_file_name", action="store_true", help="sequential output file name / 生成画像的ファイル名的連番是")
     parser.add_argument(
         "--use_original_file_name",
         action="store_true",
-        help="prepend original file name in img2img / img2imgで元画像のファイル名を生成画像のファイル名の先頭に付ける",
+        help="prepend original file name in img2img / img2imgで元画像的ファイル名的生成画像的ファイル名的先頭に付ける",
     )
     # parser.add_argument("--ddim_eta", type=float, default=0.0, help="ddim eta (eta=0.0 corresponds to deterministic sampling", )
-    parser.add_argument("--n_iter", type=int, default=1, help="sample this often / 繰り返し回数")
+    parser.add_argument("--n_iter", type=int, default=1, help="sample this often / 重复号码")
     parser.add_argument("--H", type=int, default=None, help="image height, in pixel space / 生成画像高さ")
     parser.add_argument("--W", type=int, default=None, help="image width, in pixel space / 生成画像幅")
     parser.add_argument(
-        "--original_height", type=int, default=None, help="original height for SDXL conditioning / SDXLの条件付けに用いるoriginal heightの値"
+        "--original_height", type=int, default=None, help="original height for SDXL conditioning / SDXL的条件付けに用いるoriginal height的値"
     )
     parser.add_argument(
-        "--original_width", type=int, default=None, help="original width for SDXL conditioning / SDXLの条件付けに用いるoriginal widthの値"
+        "--original_width", type=int, default=None, help="original width for SDXL conditioning / SDXL的条件付けに用いるoriginal width的値"
     )
-    parser.add_argument("--crop_top", type=int, default=None, help="crop top for SDXL conditioning / SDXLの条件付けに用いるcrop topの値")
-    parser.add_argument("--crop_left", type=int, default=None, help="crop left for SDXL conditioning / SDXLの条件付けに用いるcrop leftの値")
+    parser.add_argument("--crop_top", type=int, default=None, help="crop top for SDXL conditioning / SDXL的条件付けに用いるcrop top的値")
+    parser.add_argument("--crop_left", type=int, default=None, help="crop left for SDXL conditioning / SDXL的条件付けに用いるcrop left的値")
     parser.add_argument("--batch_size", type=int, default=1, help="batch size / バッチサイズ")
     parser.add_argument(
         "--vae_batch_size",
         type=float,
         default=None,
-        help="batch size for VAE, < 1.0 for ratio / VAE処理時のバッチサイズ、1未満の値の場合は通常バッチサイズの比率",
+        help="batch size for VAE, < 1.0 for ratio / VAE処理時的バッチサイズ、1未満的値的場合牙齿通常バッチサイズ的比率",
     )
     parser.add_argument(
         "--vae_slices",
         type=int,
         default=None,
-        help="number of slices to split image into for VAE to reduce VRAM usage, None for no splitting (default), slower if specified. 16 or 32 recommended / VAE処理時にVRAM使用量削減のため画像を分割するスライス数、Noneの場合は分割しない（デフォルト）、指定すると遅くなる。16か32程度を推奨",
+        help="number of slices to split image into for VAE to reduce VRAM usage, None for no splitting (default), slower if specified. 16 or 32 recommended / VAE処理時にVRAM使用量削減的ため图像分割するスライス数、None的場合牙齿分割しない（デフォルト）、指定すると遅くなる。16か32程度的推奨",
     )
-    parser.add_argument("--no_half_vae", action="store_true", help="do not use fp16/bf16 precision for VAE / VAE処理時にfp16/bf16を使わない")
+    parser.add_argument("--no_half_vae", action="store_true", help="do not use fp16/bf16 precision for VAE / VAE処理時にfp16/bf16的使わない")
     parser.add_argument("--steps", type=int, default=50, help="number of ddim sampling steps / サンプリングステップ数")
     parser.add_argument(
         "--sampler",
@@ -2382,7 +2382,7 @@ def setup_parser() -> argparse.ArgumentParser:
             "k_dpm_2",
             "k_dpm_2_a",
         ],
-        help=f"sampler (scheduler) type / サンプラー（スケジューラ）の種類",
+        help=f"sampler (scheduler) type / サンプラー（スケジューラ）的種類",
     )
     parser.add_argument(
         "--scale",
@@ -2390,90 +2390,90 @@ def setup_parser() -> argparse.ArgumentParser:
         default=7.5,
         help="unconditional guidance scale: eps = eps(x, empty) + scale * (eps(x, cond) - eps(x, empty)) / guidance scale",
     )
-    parser.add_argument("--ckpt", type=str, default=None, help="path to checkpoint of model / モデルのcheckpointファイルまたはディレクトリ")
+    parser.add_argument("--ckpt", type=str, default=None, help="path to checkpoint of model / モデル的checkpointファイルまた牙齿ディレクトリ")
     parser.add_argument(
-        "--vae", type=str, default=None, help="path to checkpoint of vae to replace / VAEを入れ替える場合、VAEのcheckpointファイルまたはディレクトリ"
+        "--vae", type=str, default=None, help="path to checkpoint of vae to replace / VAE的入れ替える場合、VAE的checkpointファイルまた牙齿ディレクトリ"
     )
     parser.add_argument(
         "--tokenizer_cache_dir",
         type=str,
         default=None,
-        help="directory for caching Tokenizer (for offline training) / Tokenizerをキャッシュするディレクトリ（ネット接続なしでの学習のため）",
+        help="directory for caching Tokenizer (for offline training) / Tokenizer的キャッシュするディレクトリ（ネット接続なしで的学習的ため）",
     )
     # parser.add_argument("--replace_clip_l14_336", action='store_true',
-    #                     help="Replace CLIP (Text Encoder) to l/14@336 / CLIP(Text Encoder)をl/14@336に入れ替える")
+    #                     help="Replace CLIP (Text Encoder) to l/14@336 / CLIP(Text Encoder)的l/14@336に入れ替える")
     parser.add_argument(
         "--seed",
         type=int,
         default=None,
-        help="seed, or seed of seeds in multiple generation / 1枚生成時のseed、または複数枚生成時の乱数seedを決めるためのseed",
+        help="seed, or seed of seeds in multiple generation / 1枚生成時的seed、また牙齿複数枚生成時的乱数seed的決めるため的seed",
     )
     parser.add_argument(
         "--iter_same_seed",
         action="store_true",
-        help="use same seed for all prompts in iteration if no seed specified / 乱数seedの指定がないとき繰り返し内はすべて同じseedを使う（プロンプト間の差異の比較用）",
+        help="use same seed for all prompts in iteration if no seed specified / 乱数seed的指定当没有繰り返し内牙齿すべて同じseed的使う（プロンプト間的差異的比較用）",
     )
-    parser.add_argument("--fp16", action="store_true", help="use fp16 / fp16を指定し省メモリ化する")
-    parser.add_argument("--bf16", action="store_true", help="use bfloat16 / bfloat16を指定し省メモリ化する")
-    parser.add_argument("--xformers", action="store_true", help="use xformers / xformersを使用し高速化する")
+    parser.add_argument("--fp16", action="store_true", help="use fp16 / fp16的指定し省メモリ化する")
+    parser.add_argument("--bf16", action="store_true", help="use bfloat16 / bfloat16的指定し省メモリ化する")
+    parser.add_argument("--xformers", action="store_true", help="use xformers / xformers的使用し高速化する")
     parser.add_argument("--sdpa", action="store_true", help="use sdpa in PyTorch 2 / sdpa")
     parser.add_argument(
         "--diffusers_xformers",
         action="store_true",
-        help="use xformers by diffusers (Hypernetworks doesn't work) / Diffusersでxformersを使用する（Hypernetwork利用不可）",
+        help="use xformers by diffusers (Hypernetworks doesn't work) / Diffusersでxformers的使用する（Hypernetwork利用不可）",
     )
     parser.add_argument(
-        "--opt_channels_last", action="store_true", help="set channels last option to model / モデルにchannels lastを指定し最適化する"
+        "--opt_channels_last", action="store_true", help="set channels last option to model / モデルにchannels last的指定し最適化する"
     )
     parser.add_argument(
-        "--network_module", type=str, default=None, nargs="*", help="additional network module to use / 追加ネットワークを使う時そのモジュール名"
+        "--network_module", type=str, default=None, nargs="*", help="additional network module to use / 追加ネットワーク的使う時そ的モジュール名"
     )
     parser.add_argument(
-        "--network_weights", type=str, default=None, nargs="*", help="additional network weights to load / 追加ネットワークの重み"
+        "--network_weights", type=str, default=None, nargs="*", help="additional network weights to load / 追加ネットワーク的重み"
     )
-    parser.add_argument("--network_mul", type=float, default=None, nargs="*", help="additional network multiplier / 追加ネットワークの効果の倍率")
+    parser.add_argument("--network_mul", type=float, default=None, nargs="*", help="additional network multiplier / 追加ネットワーク的効果的倍率")
     parser.add_argument(
-        "--network_args", type=str, default=None, nargs="*", help="additional argmuments for network (key=value) / ネットワークへの追加の引数"
+        "--network_args", type=str, default=None, nargs="*", help="additional argmuments for network (key=value) / ネットワークへ的追加的引数"
     )
-    parser.add_argument("--network_show_meta", action="store_true", help="show metadata of network model / ネットワークモデルのメタデータを表示する")
-    parser.add_argument("--network_merge", action="store_true", help="merge network weights to original model / ネットワークの重みをマージする")
+    parser.add_argument("--network_show_meta", action="store_true", help="show metadata of network model / ネットワークモデル的メタデータ的表示する")
+    parser.add_argument("--network_merge", action="store_true", help="merge network weights to original model / ネットワーク的重み的マージする")
     parser.add_argument(
-        "--network_pre_calc", action="store_true", help="pre-calculate network for generation / ネットワークのあらかじめ計算して生成する"
+        "--network_pre_calc", action="store_true", help="pre-calculate network for generation / ネットワーク的あらかじめ計算して生成する"
     )
     parser.add_argument(
         "--textual_inversion_embeddings",
         type=str,
         default=None,
         nargs="*",
-        help="Embeddings files of Textual Inversion / Textual Inversionのembeddings",
+        help="Embeddings files of Textual Inversion / Textual Inversion的embeddings",
     )
-    parser.add_argument("--clip_skip", type=int, default=None, help="layer number from bottom to use in CLIP / CLIPの後ろからn層目の出力を使う")
+    parser.add_argument("--clip_skip", type=int, default=None, help="layer number from bottom to use in CLIP / CLIP的後ろからn層目的出力的使う")
     parser.add_argument(
         "--max_embeddings_multiples",
         type=int,
         default=None,
-        help="max embeding multiples, max token length is 75 * multiples / トークン長をデフォルトの何倍とするか 75*この値 がトークン長となる",
+        help="max embeding multiples, max token length is 75 * multiples / トークン長的デフォルト的何倍とするか 75*こ的値 但トークン長となる",
     )
     parser.add_argument(
-        "--guide_image_path", type=str, default=None, nargs="*", help="image to CLIP guidance / CLIP guided SDでガイドに使う画像"
+        "--guide_image_path", type=str, default=None, nargs="*", help="image to CLIP guidance / CLIP guided SD用于指南的图像"
     )
     parser.add_argument(
         "--highres_fix_scale",
         type=float,
         default=None,
-        help="enable highres fix, reso scale for 1st stage / highres fixを有効にして最初の解像度をこのscaleにする",
+        help="enable highres fix, reso scale for 1st stage / highres fix的有効にして最初的解像度的こ的scale是",
     )
     parser.add_argument(
-        "--highres_fix_steps", type=int, default=28, help="1st stage steps for highres fix / highres fixの最初のステージのステップ数"
+        "--highres_fix_steps", type=int, default=28, help="1st stage steps for highres fix / highres fix的最初的ステージ的ステップ数"
     )
     parser.add_argument(
         "--highres_fix_strength",
         type=float,
         default=None,
-        help="1st stage img2img strength for highres fix / highres fixの最初のステージのimg2img時のstrength、省略時はstrengthと同じ",
+        help="1st stage img2img strength for highres fix / highres fix的最初的ステージ的img2img時的strength、省略時牙齿strengthと同じ",
     )
     parser.add_argument(
-        "--highres_fix_save_1st", action="store_true", help="save 1st stage images for highres fix / highres fixの最初のステージの画像を保存する"
+        "--highres_fix_save_1st", action="store_true", help="save 1st stage images for highres fix / highres fix的最初的ステージ的图像保存する"
     )
     parser.add_argument(
         "--highres_fix_latents_upscaling",
@@ -2481,31 +2481,31 @@ def setup_parser() -> argparse.ArgumentParser:
         help="use latents upscaling for highres fix / highres fixでlatentで拡大する",
     )
     parser.add_argument(
-        "--highres_fix_upscaler", type=str, default=None, help="upscaler module for highres fix / highres fixで使うupscalerのモジュール名"
+        "--highres_fix_upscaler", type=str, default=None, help="upscaler module for highres fix / highres fixで使うupscaler的モジュール名"
     )
     parser.add_argument(
         "--highres_fix_upscaler_args",
         type=str,
         default=None,
-        help="additional argmuments for upscaler (key=value) / upscalerへの追加の引数",
+        help="additional argmuments for upscaler (key=value) / upscalerへ的追加的引数",
     )
     parser.add_argument(
         "--highres_fix_disable_control_net",
         action="store_true",
-        help="disable ControlNet for highres fix / highres fixでControlNetを使わない",
+        help="disable ControlNet for highres fix / highres fixでControlNet的使わない",
     )
 
     parser.add_argument(
-        "--negative_scale", type=float, default=None, help="set another guidance scale for negative prompt / ネガティブプロンプトのscaleを指定する"
+        "--negative_scale", type=float, default=None, help="set another guidance scale for negative prompt / ネガティブプロンプト的scale的指定する"
     )
 
     parser.add_argument(
-        "--control_net_models", type=str, default=None, nargs="*", help="ControlNet models to use / 使用するControlNetのモデル名"
+        "--control_net_models", type=str, default=None, nargs="*", help="ControlNet models to use / 使用するControlNet的モデル名"
     )
     parser.add_argument(
-        "--control_net_preps", type=str, default=None, nargs="*", help="ControlNet preprocess to use / 使用するControlNetのプリプロセス名"
+        "--control_net_preps", type=str, default=None, nargs="*", help="ControlNet preprocess to use / 使用するControlNet的プリプロセス名"
     )
-    parser.add_argument("--control_net_weights", type=float, default=None, nargs="*", help="ControlNet weights / ControlNetの重み")
+    parser.add_argument("--control_net_weights", type=float, default=None, nargs="*", help="ControlNet weights / ControlNet的重み")
     parser.add_argument(
         "--control_net_ratios",
         type=float,
@@ -2514,7 +2514,7 @@ def setup_parser() -> argparse.ArgumentParser:
         help="ControlNet guidance ratio for steps / ControlNetでガイドするステップ比率",
     )
     # parser.add_argument(
-    #     "--control_net_image_path", type=str, default=None, nargs="*", help="image for ControlNet guidance / ControlNetでガイドに使う画像"
+    #     "--control_net_image_path", type=str, default=None, nargs="*", help="image for ControlNet guidance / ControlNet用于指南的图像"
     # )
 
     return parser

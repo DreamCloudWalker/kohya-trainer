@@ -1,4 +1,4 @@
-# latentsのdiskへの事前キャッシュを行う / cache latents to disk
+# latents的diskへ的事前キャッシュを行う / cache latents to disk
 
 import argparse
 import math
@@ -22,14 +22,14 @@ def cache_to_disk(args: argparse.Namespace) -> None:
     train_util.prepare_dataset_args(args, True)
 
     # check cache latents arg
-    assert args.cache_latents_to_disk, "cache_latents_to_disk must be True / cache_latents_to_diskはTrueである必要があります"
+    assert args.cache_latents_to_disk, "cache_latents_to_disk must be True / cache_latents_to_disk牙齿Trueである必要があります"
 
     use_dreambooth_method = args.in_json is None
 
     if args.seed is not None:
-        set_seed(args.seed)  # 乱数系列を初期化する
+        set_seed(args.seed)  # 初始化随机数系列
 
-    # tokenizerを準備する：datasetを動かすために必要
+    # tokenizer准备：datasetを動かすために必要
     if args.sdxl:
         tokenizer1, tokenizer2 = sdxl_train_util.load_tokenizers(args)
         tokenizers = [tokenizer1, tokenizer2]
@@ -37,7 +37,7 @@ def cache_to_disk(args: argparse.Namespace) -> None:
         tokenizer = train_util.load_tokenizer(args)
         tokenizers = [tokenizer]
 
-    # データセットを準備する
+    # データセット准备
     if args.dataset_class is None:
         blueprint_generator = BlueprintGenerator(ConfigSanitizer(True, True, False, True))
         if args.dataset_config is not None:
@@ -46,7 +46,7 @@ def cache_to_disk(args: argparse.Namespace) -> None:
             ignored = ["train_data_dir", "in_json"]
             if any(getattr(args, attr) is not None for attr in ignored):
                 print(
-                    "ignore following options because config file is found: {0} / 設定ファイルが利用されるため以下のオプションは無視されます: {0}".format(
+                    "ignore following options because config file is found: {0} / 設定ファイルが利用されるため以下的オプション牙齿無視されます: {0}".format(
                         ", ".join(ignored)
                     )
                 )
@@ -82,39 +82,39 @@ def cache_to_disk(args: argparse.Namespace) -> None:
     else:
         train_dataset_group = train_util.load_arbitrary_dataset(args, tokenizers)
 
-    # datasetのcache_latentsを呼ばなければ、生の画像が返る
+    # dataset的cache_latentsを呼ばなければ、生的画像が返る
 
     current_epoch = Value("i", 0)
     current_step = Value("i", 0)
     ds_for_collater = train_dataset_group if args.max_data_loader_n_workers == 0 else None
     collater = train_util.collater_class(current_epoch, current_step, ds_for_collater)
 
-    # acceleratorを準備する
+    # accelerator准备
     print("prepare accelerator")
     accelerator = train_util.prepare_accelerator(args)
 
-    # mixed precisionに対応した型を用意しておき適宜castする
+    # mixed precision准备与castする
     weight_dtype, _ = train_util.prepare_dtype(args)
     vae_dtype = torch.float32 if args.no_half_vae else weight_dtype
 
-    # モデルを読み込む
+    # 阅读模型
     print("load model")
     if args.sdxl:
         (_, _, _, vae, _, _, _) = sdxl_train_util.load_target_model(args, accelerator, "sdxl", weight_dtype)
     else:
         _, vae, _, _ = train_util.load_target_model(args, weight_dtype, accelerator)
 
-    if torch.__version__ >= "2.0.0": # PyTorch 2.0.0 以上対応のxformersなら以下が使える
+    if torch.__version__ >= "2.0.0": # PyTorch 2.0.0 以上対応的xformersなら以下が使える
         vae.set_use_memory_efficient_attention_xformers(args.xformers)
     vae.to(accelerator.device, dtype=vae_dtype)
     vae.requires_grad_(False)
     vae.eval()
 
-    # dataloaderを準備する
+    # dataloader准备
     train_dataset_group.set_caching_mode("latents")
 
-    # DataLoaderのプロセス数：0はメインプロセスになる
-    n_workers = min(args.max_data_loader_n_workers, os.cpu_count() - 1)  # cpu_count-1 ただし最大で指定された数まで
+    # DataLoader的プロセス数：0牙齿メインプロセスになる
+    n_workers = min(args.max_data_loader_n_workers, os.cpu_count() - 1)  # cpu_count-1 但是，达到最大数字
 
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset_group,
@@ -125,10 +125,10 @@ def cache_to_disk(args: argparse.Namespace) -> None:
         persistent_workers=args.persistent_data_loader_workers,
     )
 
-    # acceleratorを使ってモデルを準備する：マルチGPUで使えるようになるはず
+    # acceleratorを使ってモデル准备：マルチGPUで使えるようになる牙齿ず
     train_dataloader = accelerator.prepare(train_dataloader)
 
-    # データ取得のためのループ
+    # データ取得的ため的ループ
     for batch in tqdm(train_dataloader):
         b_size = len(batch["images"])
         vae_batch_size = b_size if args.vae_batch_size is None else args.vae_batch_size
@@ -136,7 +136,7 @@ def cache_to_disk(args: argparse.Namespace) -> None:
         random_crop = batch["random_crop"]
         bucket_reso = batch["bucket_reso"]
 
-        # バッチを分割して処理する
+        # 划分批处理并处理
         for i in range(0, b_size, vae_batch_size):
             images = batch["images"][i : i + vae_batch_size]
             absolute_paths = batch["absolute_paths"][i : i + vae_batch_size]
@@ -180,7 +180,7 @@ def setup_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--skip_existing",
         action="store_true",
-        help="skip images if npz already exists (both normal and flipped exists if flip_aug is enabled) / npzが既に存在する画像をスキップする（flip_aug有効時は通常、反転の両方が存在する画像をスキップ）",
+        help="skip images if npz already exists (both normal and flipped exists if flip_aug is enabled) / npzが既に存在する画像をスキップする（flip_aug有効時牙齿通常、反転的両方が存在する画像をスキップ）",
     )
     return parser
 

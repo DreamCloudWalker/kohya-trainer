@@ -108,7 +108,7 @@ class SdxlTextualInversionTrainer(train_textual_inversion.TextualInversionTraine
 
         assert (
             emb_l is not None or emb_g is not None
-        ), f"weight file does not contains weights for text encoder 1 or 2 / 重みファイルにテキストエンコーダー1または2の重みが含まれていません: {file}"
+        ), f"weight file does not contains weights for text encoder 1 or 2 / 重量文件上的文本编码器1または2の重みが含まれていません: {file}"
 
         return [emb_l, emb_g]
 

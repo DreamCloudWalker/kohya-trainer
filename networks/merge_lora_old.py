@@ -103,7 +103,7 @@ def merge_lora_models(models, ratios, merge_dtype):
     for key in lora_sd.keys():
       if 'alpha' in key:
         if key in merged_sd:
-          assert merged_sd[key] == lora_sd[key], f"alpha mismatch / alphaが異なる場合、現時点ではマージできません"
+          assert merged_sd[key] == lora_sd[key], f"alpha mismatch / alpha是不同的、現時点ではマージできません"
         else:
           alpha = lora_sd[key].detach().numpy()
           merged_sd[key] = lora_sd[key]

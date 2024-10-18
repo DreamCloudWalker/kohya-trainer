@@ -40,7 +40,7 @@ def main(args):
     if args.debug:
       print(image_key, caption)
 
-  # metadataを書き出して終わり
+  # metadata写下并结束
   print(f"writing metadata: {args.out_json}")
   Path(args.out_json).write_text(json.dumps(metadata, indent=2), encoding='utf-8')
   print("done!")
@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
 
-  # スペルミスしていたオプションを復元する
+  # 恢复精子的选择
   if args.caption_extention is not None:
     args.caption_extension = args.caption_extention
 

@@ -334,7 +334,7 @@ def setup_parser() -> argparse.ArgumentParser:
   parser = argparse.ArgumentParser()
 
   parser.add_argument("--save_precision", type=str, default=None,
-                      choices=[None, "float", "fp16", "bf16"], help="precision in saving, float if omitted / 保存時の精度、未指定時はfloat")
+                      choices=[None, "float", "fp16", "bf16"], help="precision in saving, float if omitted / 保存时的准确性、未指定時はfloat")
   parser.add_argument("--new_rank", type=int, default=4,
                       help="Specify rank of output LoRA / 出力するLoRAのrank (dim)")
   parser.add_argument("--save_to", type=str, default=None,

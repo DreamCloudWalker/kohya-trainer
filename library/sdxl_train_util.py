@@ -85,7 +85,7 @@ def _load_target_model(name_or_path: str, vae_path: Optional[str], model_version
                     raise ex
         except EnvironmentError as ex:
             print(
-                f"model is not found as a file or in Hugging Face, perhaps file name is wrong? / 指定したモデル名のファイル、またはHugging Faceのモデルが見つかりません。ファイル名が誤っているかもしれません: {name_or_path}"
+                f"model is not found as a file or in Hugging Face, perhaps file name is wrong? / 指定型号的文件、またはHugging Faceのモデルが見つかりません。ファイル名が誤っているかもしれません: {name_or_path}"
             )
             raise ex
 
@@ -105,7 +105,7 @@ def _load_target_model(name_or_path: str, vae_path: Optional[str], model_version
         logit_scale = None
         ckpt_info = None
 
-    # VAEを読み込む
+    # VAE插入
     if vae_path is not None:
         vae = model_util.load_vae(vae_path, weight_dtype)
         print("additional VAE loaded")
@@ -227,8 +227,8 @@ def save_sd_model_on_train_end(
     )
 
 
-# epochとstepの保存、メタデータにepoch/stepが含まれ引数が同じになるため、統合している
-# on_epoch_end: Trueならepoch終了時、Falseならstep経過時
+# epoch和stepの保存、メタデータにepoch/stepが含まれ引数が同じになるため、統合している
+# on_epoch_end: True口服epoch終了時、False口服step経過時
 def save_sd_model_on_epoch_end_or_stepwise(
     args: argparse.Namespace,
     on_epoch_end: bool,
@@ -299,7 +299,7 @@ def add_sdxl_training_arguments(parser: argparse.ArgumentParser):
 
 
 def verify_sdxl_training_args(args: argparse.Namespace, supportTextEncoderCaching: bool = True):
-    assert not args.v2, "v2 cannot be enabled in SDXL training / SDXL学習ではv2を有効にすることはできません"
+    assert not args.v2, "v2 cannot be enabled in SDXL training / SDXL学習ではv2を有効にするこ和はできません"
     if args.v_parameterization:
         print("v_parameterization will be unexpected / SDXL学習ではv_parameterizationは想定外の動作になります")
 
@@ -321,7 +321,7 @@ def verify_sdxl_training_args(args: argparse.Namespace, supportTextEncoderCachin
 
     assert (
         not hasattr(args, "weighted_captions") or not args.weighted_captions
-    ), "weighted_captions cannot be enabled in SDXL training currently / SDXL学習では今のところweighted_captionsを有効にすることはできません"
+    ), "weighted_captions cannot be enabled in SDXL training currently / SDXL学習では今の和ころweighted_captionsを有効にするこ和はできません"
 
     if supportTextEncoderCaching:
         if args.cache_text_encoder_outputs_to_disk and not args.cache_text_encoder_outputs:

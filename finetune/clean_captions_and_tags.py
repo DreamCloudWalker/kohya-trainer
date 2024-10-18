@@ -1,4 +1,4 @@
-# このスクリプトのライセンスは、Apache License 2.0とします
+# 此脚本许可证、Apache License 2.0和します
 # (c) 2022 Kohya S. @kohya_ss
 
 import argparse
@@ -14,13 +14,13 @@ PATTERN_HAIR_CUT = re.compile(r', (bob|hime) cut, ')
 PATTERN_HAIR = re.compile(r', ([\w\-]+) hair, ')
 PATTERN_WORD = re.compile(r', ([\w\-]+|hair ornament), ')
 
-# 複数人がいるとき、複数の髪色や目の色が定義されていれば削除する
+# 当有多个人、複数の髪色や目の色が定義されていれば削除する
 PATTERNS_REMOVE_IN_MULTI = [
     PATTERN_HAIR_LENGTH,
     PATTERN_HAIR_CUT,
     re.compile(r', [\w\-]+ eyes, '),
     re.compile(r', ([\w\-]+ sleeves|sleeveless), '),
-    # 複数の髪型定義がある場合は削除する
+    # 删除如果有多个发型定义
     re.compile(
         r', (ponytail|braid|ahoge|twintails|[\w\-]+ bun|single hair bun|single side bun|two side up|two tails|[\w\-]+ braid|sidelocks), '),
 ]
@@ -32,10 +32,10 @@ def clean_tags(image_key, tags):
   tags = tags.replace('_', ' ')
   tags = tags.replace('^@@@^', '^_^')
 
-  # remove rating: deepdanbooruのみ
+  # remove rating: deepdanbooru仅有的
   tokens = tags.split(", rating")
   if len(tokens) == 1:
-    # WD14 taggerのときはこちらになるのでメッセージは出さない
+    # WD14 tagger我不会发信息，因为它会在这里
     # print("no rating:")
     # print(f"{image_key} {tags}")
     pass
@@ -45,17 +45,17 @@ def clean_tags(image_key, tags):
       print(f"{image_key} {tags}")
     tags = tokens[0]
 
-  tags = ", " + tags.replace(", ", ", , ") + ", "     # カンマ付きで検索をするための身も蓋もない対策
+  tags = ", " + tags.replace(", ", ", , ") + ", "     # 没有逗号搜索的身体或盖子的措施
   
-  # 複数の人物がいる場合は髪色等のタグを削除する
+  # 如果您有多个人，请删除标签，例如头发颜色
   if 'girls' in tags or 'boys' in tags:
     for pat in PATTERNS_REMOVE_IN_MULTI:
       found = pat.findall(tags)
-      if len(found) > 1:                        # 二つ以上、タグがある
+      if len(found) > 1:                        # 两个或更多、タグがある
         tags = pat.sub("", tags)
 
-    # 髪の特殊対応
-    srch_hair_len = PATTERN_HAIR_LENGTH.search(tags)   # 髪の長さタグは例外なので避けておく（全員が同じ髪の長さの場合）
+    # 对头发的特殊支撑
+    srch_hair_len = PATTERN_HAIR_LENGTH.search(tags)   # 头发的长度标签是一个例外，所以避免（全員が同じ髪の長さの場合）
     if srch_hair_len:
       org = srch_hair_len.group()
       tags = PATTERN_HAIR_LENGTH.sub(", @@@, ", tags)
@@ -65,9 +65,9 @@ def clean_tags(image_key, tags):
       tags = PATTERN_HAIR.sub("", tags)
 
     if srch_hair_len:
-      tags = tags.replace(", @@@, ", org)                   # 戻す
+      tags = tags.replace(", @@@, ", org)                   # 返回
 
-  # white shirtとshirtみたいな重複タグの削除
+  # white shirt和shirtみたいな重複タグの削除
   found = PATTERN_WORD.findall(tags)
   for word in found:
     if re.search(f", ((\w+) )+{word}, ", tags):
@@ -79,8 +79,8 @@ def clean_tags(image_key, tags):
   return tags
 
 
-# 上から順に検索、置換される
-# ('置換元文字列', '置換後文字列')
+# 从顶部搜索、置換される
+# ('替换源字符串', '置換後文字列')
 CAPTION_REPLACEMENTS = [
     ('anime anime', 'anime'),
     ('young ', ''),
@@ -128,7 +128,7 @@ def main(args):
     with open(args.in_json, "rt", encoding='utf-8') as f:
       metadata = json.load(f)
   else:
-    print("no metadata / メタデータファイルがありません")
+    print("no metadata / 没有元数据文件")
     return
 
   print("cleaning captions and tags.")
@@ -156,7 +156,7 @@ def main(args):
         print("FROM: " + org)
         print("TO:   " + caption)
 
-  # metadataを書き出して終わり
+  # metadata写下并结束
   print(f"writing metadata: {args.out_json}")
   with open(args.out_json, "wt", encoding='utf-8') as f:
     json.dump(metadata, f, indent=2)
@@ -165,7 +165,7 @@ def main(args):
 
 def setup_parser() -> argparse.ArgumentParser:
   parser = argparse.ArgumentParser()
-  # parser.add_argument("train_data_dir", type=str, help="directory for train images / 学習画像データのディレクトリ")
+  # parser.add_argument("train_data_dir", type=str, help="directory for train images / 学习图像数据目录")
   parser.add_argument("in_json", type=str, help="metadata file to input / 読み込むメタデータファイル")
   parser.add_argument("out_json", type=str, help="metadata file to output / メタデータファイル書き出し先")
   parser.add_argument("--debug", action="store_true", help="debug mode")
@@ -180,8 +180,8 @@ if __name__ == '__main__':
   if len(unknown) == 1:
     print("WARNING: train_data_dir argument is removed. This script will not work with three arguments in future. Please specify two arguments: in_json and out_json.")
     print("All captions and tags in the metadata are processed.")
-    print("警告: train_data_dir引数は不要になりました。将来的には三つの引数を指定すると動かなくなる予定です。読み込み元のメタデータと書き出し先の二つの引数だけ指定してください。")
-    print("メタデータ内のすべてのキャプションとタグが処理されます。")
+    print("警告: train_data_dir引数は不要になりました。将来的には三つの引数を指定する和動かなくなる予定です。読み込み元のメタデータ和書き出し先の二つの引数だけ指定してください。")
+    print("メタデータ内のすべてのキャプション和タグが処理されます。")
     args.in_json = args.out_json
     args.out_json = unknown[0]
   elif len(unknown) > 0:

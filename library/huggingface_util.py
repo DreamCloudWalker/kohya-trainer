@@ -32,7 +32,7 @@ def upload(
     if not exists_repo(repo_id=repo_id, repo_type=repo_type, token=token):
         try:
             api.create_repo(repo_id=repo_id, repo_type=repo_type, private=private)
-        except Exception as e:  # とりあえずRepositoryNotFoundErrorは確認したが他にあると困るので
+        except Exception as e:  # 目前RepositoryNotFoundErrorは確認したが他にあると困るので
             print("===========================================")
             print(f"failed to create HuggingFace repo / HuggingFaceのリポジトリの作成に失敗しました : {e}")
             print("===========================================")
@@ -55,7 +55,7 @@ def upload(
                     path_or_fileobj=src,
                     path_in_repo=path_in_repo,
                 )
-        except Exception as e:  # RuntimeErrorを確認済みだが他にあると困るので
+        except Exception as e:  # RuntimeError我已经确认了，但是如果还有其他事情，我会遇到麻烦
             print("===========================================")
             print(f"failed to upload to HuggingFace / HuggingFaceへのアップロードに失敗しました : {e}")
             print("===========================================")

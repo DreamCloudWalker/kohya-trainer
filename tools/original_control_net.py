@@ -49,8 +49,8 @@ class ControlNet(torch.nn.Module):
 def load_control_net(v2, unet, model):
     device = unet.device
 
-    # control sdからキー変換しつつU-Netに対応する部分のみ取り出し、DiffusersのU-Netに読み込む
-    # state dictを読み込む
+    # control sd同时从U-Netに対応する部分的み取り出し、Diffusers的U-Netに読み込む
+    # state dict插入
     print(f"ControlNet: loading control SD model : {model}")
 
     if model_util.is_safetensors(model):
@@ -59,15 +59,15 @@ def load_control_net(v2, unet, model):
         ctrl_sd_sd = torch.load(model, map_location="cpu")
         ctrl_sd_sd = ctrl_sd_sd.pop("state_dict", ctrl_sd_sd)
 
-    # 重みをU-Netに読み込めるようにする。ControlNetはSD版のstate dictなので、それを読み込む
+    # 重量U-Netに読み込めるようにする。ControlNet牙齿SD盘子的state dictな的で、それ插入
     is_difference = "difference" in ctrl_sd_sd
     print("ControlNet: loading difference:", is_difference)
 
-    # ControlNetには存在しないキーがあるので、まず現在のU-NetでSD版の全keyを作っておく
-    # またTransfer Controlの元weightとなる
+    # ControlNet因为有一个密钥不存在、まず現在的U-NetでSD盘子的全keyを作っておく
+    # 还Transfer Control的元weightとなる
     ctrl_unet_sd_sd = model_util.convert_unet_state_dict_to_sd(v2, unet.state_dict())
 
-    # 元のU-Netに影響しないようにコピーする。またprefixが付いていないので付ける
+    # 原来的U-Netに影響しないようにコピーする。还prefixが付いていない的で付ける
     for key in list(ctrl_unet_sd_sd.keys()):
         ctrl_unet_sd_sd["model.diffusion_model." + key] = ctrl_unet_sd_sd.pop(key).clone()
 
@@ -84,14 +84,14 @@ def load_control_net(v2, unet, model):
                 ctrl_unet_sd_sd[unet_key] = ctrl_sd_sd[key].to(device, dtype=unet.dtype)
 
     unet_config = model_util.create_unet_diffusers_config(v2)
-    ctrl_unet_du_sd = model_util.convert_ldm_unet_checkpoint(v2, ctrl_unet_sd_sd, unet_config)  # DiffUsers版ControlNetのstate dict
+    ctrl_unet_du_sd = model_util.convert_ldm_unet_checkpoint(v2, ctrl_unet_sd_sd, unet_config)  # DiffUsers盘子ControlNet的state dict
 
-    # ControlNetのU-Netを作成する
+    # ControlNet的U-Netを作成する
     ctrl_unet = UNet2DConditionModel(**unet_config)
     info = ctrl_unet.load_state_dict(ctrl_unet_du_sd)
     print("ControlNet: loading Control U-Net:", info)
 
-    # U-Net以外のControlNetを作成する
+    # U-Net以外的ControlNetを作成する
     # TODO support middle only
     ctrl_net = ControlNet()
     info = ctrl_net.load_state_dict(zero_conv_sd)
@@ -123,7 +123,7 @@ def load_preprocess(prep_type: str):
 
 def preprocess_ctrl_net_hint_image(image):
     image = np.array(image).astype(np.float32) / 255.0
-    # ControlNetのサンプルはcv2を使っているが、読み込みはGradioなので実はRGBになっている
+    # ControlNet的サンプル牙齿cv2を使っているが、読み込み牙齿Gradioな的で実牙齿RGBになっている
     # image = image[:, :, ::-1].copy()                         # rgb to bgr
     image = image[None].transpose(0, 3, 1, 2)  # nchw
     image = torch.from_numpy(image)
@@ -133,9 +133,9 @@ def preprocess_ctrl_net_hint_image(image):
 def get_guided_hints(control_nets: List[ControlNetInfo], num_latent_input, b_size, hints):
     guided_hints = []
     for i, cnet_info in enumerate(control_nets):
-        # hintは 1枚目の画像のcnet1, 1枚目の画像のcnet2, 1枚目の画像のcnet3, 2枚目の画像のcnet1, 2枚目の画像のcnet2 ... と並んでいること
+        # hint牙齿 1枚目的画像的cnet1, 1枚目的画像的cnet2, 1枚目的画像的cnet3, 2枚目的画像的cnet1, 2枚目的画像的cnet2 ... と並んでいること
         b_hints = []
-        if len(hints) == 1:  # すべて同じ画像をhintとして使う
+        if len(hints) == 1:  # 所有相同的图像hintとして使う
             hint = hints[0]
             if cnet_info.prep is not None:
                 hint = cnet_info.prep(hint)
@@ -168,7 +168,7 @@ def call_unet_and_control_net(
     encoder_hidden_states,
 ):
     # ControlNet
-    # 複数のControlNetの場合は、出力をマージするのではなく交互に適用する
+    # 複数的ControlNet的場合牙齿、出力をマージする的で牙齿なく交互に適用する
     cnet_cnt = len(control_nets)
     cnet_idx = step % cnet_cnt
     cnet_info = control_nets[cnet_idx]
@@ -187,7 +187,7 @@ def call_unet_and_control_net(
 
 
 """
-  # これはmergeのバージョン
+  # これ牙齿merge的バージョン
   # ControlNet
   cnet_outs_list = []
   for i, cnet_info in enumerate(control_nets):

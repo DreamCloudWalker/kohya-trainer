@@ -1,7 +1,7 @@
-# このスクリプトのライセンスは、train_dreambooth.pyと同じくApache License 2.0とします
+# 此脚本许可证、train_dreambooth.py和同じくApache License 2.0和します
 # (c) 2022 Kohya S. @kohya_ss
 
-# 横長の画像から顔検出して正立するように回転し、そこを中心に正方形に切り出す
+# 从水平图像中检测脸并旋转以直立、そこを中心に正方形に切り出す
 
 # v2: extract max face if multiple faces are found
 # v3: add crop_ratio option
@@ -46,7 +46,7 @@ def detect_faces(detector, image, min_size):
 
     faces.append((cx, cy, fw, fh, angle))
 
-  faces.sort(key=lambda x: max(x[2], x[3]), reverse=True)         # 大きい順
+  faces.sort(key=lambda x: max(x[2], x[3]), reverse=True)         # 大订单
   return faces
 
 
@@ -54,7 +54,7 @@ def rotate_image(image, angle, cx, cy):
   h, w = image.shape[0:2]
   rot_mat = cv2.getRotationMatrix2D((cx, cy), angle, 1.0)
 
-  # # 回転する分、すこし画像サイズを大きくする→とりあえず無効化
+  # # 部分旋转、すこし画像サイズを大きくする→和りあえず無効化
   # nh = max(h, int(w * math.sin(angle)))
   # nw = max(w, int(h * math.sin(angle)))
   # if nh > h or nw > w:
@@ -74,14 +74,14 @@ def rotate_image(image, angle, cx, cy):
 
 
 def process(args):
-  assert (not args.resize_fit) or args.resize_face_size is None, f"resize_fit and resize_face_size can't be specified both / resize_fitとresize_face_sizeはどちらか片方しか指定できません"
+  assert (not args.resize_fit) or args.resize_face_size is None, f"resize_fit and resize_face_size can't be specified both / resize_fit和resize_face_sizeはどちらか片方しか指定できません"
   assert args.crop_ratio is None or args.resize_face_size is None, f"crop_ratio指定時はresize_face_sizeは指定できません"
 
-  # アニメ顔検出モデルを読み込む
+  # 阅读动漫面部检测模型
   print("loading face detector.")
   detector = create_detector('yolov3')
 
-  # cropの引数を解析する
+  # crop分析
   if args.crop_size is None:
     crop_width = crop_height = None
   else:
@@ -96,7 +96,7 @@ def process(args):
     assert len(tokens) == 2, f"crop_ratio must be 'horizontal,vertical' / crop_ratioは'幅,高さ'の倍率で指定してください"
     crop_h_ratio, crop_v_ratio = [float(t) for t in tokens]
 
-  # 画像を処理する
+  # 处理图像
   print("processing.")
   output_extension = ".png"
 
@@ -106,13 +106,13 @@ def process(args):
   for path in tqdm(paths):
     basename = os.path.splitext(os.path.basename(path))[0]
 
-    # image = cv2.imread(path)        # 日本語ファイル名でエラーになる
+    # image = cv2.imread(path)        # 日语文件名的错误
     image = cv2.imdecode(np.fromfile(path, np.uint8), cv2.IMREAD_UNCHANGED)
     if len(image.shape) == 2:
       image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
     if image.shape[2] == 4:
       print(f"image has alpha. ignore / 画像の透明度が設定されているため無視します: {path}")
-      image = image[:, :, :3].copy()                    # copyをしないと内部的に透明度情報が付いたままになるらしい
+      image = image[:, :, :3].copy()                    # copyをしない和内部的に透明度情報が付いたままになるらしい
 
     h, w = image.shape[:2]
 
@@ -126,36 +126,36 @@ def process(args):
         continue
       face_suffix = f"_{i+1:02d}" if args.multiple_faces else ""
 
-      # オプション指定があれば回転する
+      # 如果有选项规范，则旋转
       face_img = image
       if args.rotate:
         face_img, cx, cy = rotate_image(face_img, angle, cx, cy)
 
-      # オプション指定があれば顔を中心に切り出す
+      # 如果有选项规范，请将其切开在脸上
       if crop_width is not None or crop_h_ratio is not None:
         cur_crop_width, cur_crop_height = crop_width, crop_height
         if crop_h_ratio is not None:
           cur_crop_width = int(face_size * crop_h_ratio + .5)
           cur_crop_height = int(face_size * crop_v_ratio + .5)
 
-        # リサイズを必要なら行う
+        # 必要时进行调整大小
         scale = 1.0
         if args.resize_face_size is not None:
-          # 顔サイズを基準にリサイズする
+          # 根据面部尺寸调整大小
           scale = args.resize_face_size / face_size
           if scale < cur_crop_width / w:
             print(
-                f"image width too small in face size based resizing / 顔を基準にリサイズすると画像の幅がcrop sizeより小さい（顔が相対的に大きすぎる）ので顔サイズが変わります: {path}")
+                f"image width too small in face size based resizing / 顔を基準にリサイズする和画像の幅がcrop sizeより小さい（顔が相対的に大きすぎる）ので顔サイズが変わります: {path}")
             scale = cur_crop_width / w
           if scale < cur_crop_height / h:
             print(
-                f"image height too small in face size based resizing / 顔を基準にリサイズすると画像の高さがcrop sizeより小さい（顔が相対的に大きすぎる）ので顔サイズが変わります: {path}")
+                f"image height too small in face size based resizing / 顔を基準にリサイズする和画像の高さがcrop sizeより小さい（顔が相対的に大きすぎる）ので顔サイズが変わります: {path}")
             scale = cur_crop_height / h
         elif crop_h_ratio is not None:
-          # 倍率指定の時にはリサイズしない
+          # 指定放大倍数时不要调整大小
           pass
         else:
-          # 切り出しサイズ指定あり
+          # 切出规定的尺寸
           if w < cur_crop_width:
             print(f"image width too small/ 画像の幅がcrop sizeより小さいので画質が劣化します: {path}")
             scale = cur_crop_width / w
@@ -216,7 +216,7 @@ def process(args):
 
 def setup_parser() -> argparse.ArgumentParser:
   parser = argparse.ArgumentParser()
-  parser.add_argument("--src_dir", type=str, help="directory to load images / 画像を読み込むディレクトリ")
+  parser.add_argument("--src_dir", type=str, help="directory to load images / 读图像的目录")
   parser.add_argument("--dst_dir", type=str, help="directory to save images / 画像を保存するディレクトリ")
   parser.add_argument("--rotate", action="store_true", help="rotate images to align faces / 顔が正立するように画像を回転する")
   parser.add_argument("--resize_fit", action="store_true",
@@ -224,13 +224,13 @@ def setup_parser() -> argparse.ArgumentParser:
   parser.add_argument("--resize_face_size", type=int, default=None,
                       help="resize image before cropping by face size / 切り出し前に顔がこのサイズになるようにリサイズする")
   parser.add_argument("--crop_size", type=str, default=None,
-                      help="crop images with 'width,height' pixels, face centered / 顔を中心として'幅,高さ'のサイズで切り出す")
+                      help="crop images with 'width,height' pixels, face centered / 顔を中心和して'幅,高さ'のサイズで切り出す")
   parser.add_argument("--crop_ratio", type=str, default=None,
-                      help="crop images with 'horizontal,vertical' ratio to face, face centered / 顔を中心として顔サイズの'幅倍率,高さ倍率'のサイズで切り出す")
+                      help="crop images with 'horizontal,vertical' ratio to face, face centered / 顔を中心和して顔サイズの'幅倍率,高さ倍率'のサイズで切り出す")
   parser.add_argument("--min_size", type=int, default=None,
-                      help="minimum face size to output (included) / 処理対象とする顔の最小サイズ（この値以上）")
+                      help="minimum face size to output (included) / 処理対象和する顔の最小サイズ（この値以上）")
   parser.add_argument("--max_size", type=int, default=None,
-                      help="maximum face size to output (excluded) / 処理対象とする顔の最大サイズ（この値未満）")
+                      help="maximum face size to output (excluded) / 処理対象和する顔の最大サイズ（この値未満）")
   parser.add_argument("--multiple_faces", action="store_true",
                       help="output each faces / 複数の顔が見つかった場合、それぞれを切り出す")
   parser.add_argument("--debug", action="store_true", help="render rect for face / 処理後画像の顔位置に矩形を描画します")

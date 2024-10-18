@@ -134,7 +134,7 @@ def merge_vae(ckpt, vae, output):
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
-  parser.add_argument("ckpt", type=str, help="target checkpoint to replace VAE / マージ対象のモデルcheckpoint")
+  parser.add_argument("ckpt", type=str, help="target checkpoint to replace VAE / 合并的模型checkpoint")
   parser.add_argument("vae", type=str, help="VAE/model checkpoint to merge / マージするVAEまたはモデルのcheckpoint")
   parser.add_argument("output", type=str, help="output checkoint / 出力先checkpoint")
   args = parser.parse_args()

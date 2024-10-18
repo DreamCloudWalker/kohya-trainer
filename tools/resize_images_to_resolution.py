@@ -100,7 +100,7 @@ def resize_images(src_img_folder, dst_img_folder, max_resolution="512x512", divi
 
 def setup_parser() -> argparse.ArgumentParser:
   parser = argparse.ArgumentParser(
-      description='Resize images in a folder to a specified max resolution(s) / 指定されたフォルダ内の画像を指定した最大画像サイズ（面積）以下にアスペクト比を維持したままリサイズします')
+      description='Resize images in a folder to a specified max resolution(s) / 图像在指定文件夹中指定的最大图像大小（面積）以下にアスペクト比を維持したままリサイズします')
   parser.add_argument('src_img_folder', type=str, help='Source folder containing the images / 元画像のフォルダ')
   parser.add_argument('dst_img_folder', type=str, help='Destination folder to save the resized images / リサイズ後の画像を保存するフォルダ')
   parser.add_argument('--max_resolution', type=str,

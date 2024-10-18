@@ -29,13 +29,13 @@ def unet_forward_XTI(
     # The overall upsampling factor is equal to 2 ** (# num of upsampling layears).
     # However, the upsampling interpolation output size can be forced to fit any upsampling size
     # on the fly if necessary.
-    # デフォルトではサンプルは「2^アップサンプルの数」、つまり64の倍数である必要がある
-    # ただそれ以外のサイズにも対応できるように、必要ならアップサンプルのサイズを変更する
-    # 多分画質が悪くなるので、64で割り切れるようにしておくのが良い
+    # 默认情况下，示例「2^アップサンプルの数」、つまり64の倍数である必要がある
+    # 但是，它可用于其他尺寸、必要ならアップサンプルのサイズを変更する
+    # 也许图像质量会恶化、64で割り切れるようにしておくのが良い
     default_overall_up_factor = 2**self.num_upsamplers
 
     # upsample size should be forwarded when sample is not a multiple of `default_overall_up_factor`
-    # 64で割り切れないときはupsamplerにサイズを伝える
+    # 64当它不可分割的时候upsamplerにサイズを伝える
     forward_upsample_size = False
     upsample_size = None
 
@@ -45,16 +45,16 @@ def unet_forward_XTI(
 
     # 1. time
     timesteps = timestep
-    timesteps = self.handle_unusual_timesteps(sample, timesteps)  # 変な時だけ処理
+    timesteps = self.handle_unusual_timesteps(sample, timesteps)  # 仅在奇怪的时期处理
 
     t_emb = self.time_proj(timesteps)
 
     # timesteps does not contain any weights and will always return f32 tensors
     # but time_embedding might actually be running in fp16. so we need to cast here.
     # there might be better ways to encapsulate this.
-    # timestepsは重みを含まないので常にfloat32のテンソルを返す
-    # しかしtime_embeddingはfp16で動いているかもしれないので、ここでキャストする必要がある
-    # time_projでキャストしておけばいいんじゃね？
+    # timesteps它不包含体重，所以总是float32のテンソルを返す
+    # 但time_embedding牙齿fp16で動いているかもしれないので、ここでキャストする必要がある
+    # time_proj你应该施放？
     t_emb = t_emb.to(dtype=self.dtype)
     emb = self.time_embedding(t_emb)
 
@@ -65,8 +65,8 @@ def unet_forward_XTI(
     down_block_res_samples = (sample,)
     down_i = 0
     for downsample_block in self.down_blocks:
-        # downblockはforwardで必ずencoder_hidden_statesを受け取るようにしても良さそうだけど、
-        # まあこちらのほうがわかりやすいかもしれない
+        # downblock牙齿forwardで必ずencoder_hidden_statesを受け取るようにしても良さそうだけど、
+        # 好吧，这可能更容易理解
         if downsample_block.has_cross_attention:
             sample, res_samples = downsample_block(
                 hidden_states=sample,
@@ -91,7 +91,7 @@ def unet_forward_XTI(
         down_block_res_samples = down_block_res_samples[: -len(upsample_block.resnets)]  # skip connection
 
         # if we have not reached the final block and need to forward the upsample size, we do it here
-        # 前述のように最後のブロック以外ではupsample_sizeを伝える
+        # 前述のように最後のブロック以外で牙齿upsample_sizeを伝える
         if not is_final_block and forward_upsample_size:
             upsample_size = down_block_res_samples[-1].shape[2:]
 

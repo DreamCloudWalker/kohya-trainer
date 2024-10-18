@@ -107,14 +107,14 @@ def train(args):
 
     tokenizer = train_util.load_tokenizer(args)
 
-    # acceleratorを準備する
+    # accelerator准备
     print("prepare accelerator")
     accelerator = train_util.prepare_accelerator(args)
 
-    # mixed precisionに対応した型を用意しておき適宜castする
+    # mixed precision准备与cast做
     weight_dtype, save_dtype = train_util.prepare_dtype(args)
 
-    # モデルを読み込む
+    # 阅读模型
     text_encoder, vae, unet, _ = train_util.load_target_model(args, weight_dtype, accelerator)
 
     # Convert the init_word to token_id
@@ -122,7 +122,7 @@ def train(args):
         init_token_ids = tokenizer.encode(args.init_word, add_special_tokens=False)
         if len(init_token_ids) > 1 and len(init_token_ids) != args.num_vectors_per_token:
             print(
-                f"token length for init words is not same to num_vectors_per_token, init words is repeated or truncated / 初期化単語のトークン長がnum_vectors_per_tokenと合わないため、繰り返しまたは切り捨てが発生します: length {len(init_token_ids)}"
+                f"token length for init words is not same to num_vectors_per_token, init words is repeated or truncated / 初始化单词的令牌长度是num_vectors_per_tokenと合わないため、繰り返しまたは切り捨てが発生します: length {len(init_token_ids)}"
             )
     else:
         init_token_ids = None
@@ -132,7 +132,7 @@ def train(args):
     num_added_tokens = tokenizer.add_tokens(token_strings)
     assert (
         num_added_tokens == args.num_vectors_per_token
-    ), f"tokenizer has same word to token string. please use another one / 指定したargs.token_stringは既に存在します。別の単語を使ってください: {args.token_string}"
+    ), f"tokenizer has same word to token string. please use another one / 指定的args.token_stringは既に存在します。別の単語を使ってください: {args.token_string}"
 
     token_ids = tokenizer.convert_tokens_to_ids(token_strings)
     print(f"tokens are added: {token_ids}")
@@ -179,7 +179,7 @@ def train(args):
         embeddings = load_weights(args.weights)
         assert len(token_ids) == len(
             embeddings
-        ), f"num_vectors_per_token is mismatch for weights / 指定した重みとnum_vectors_per_tokenの値が異なります: {len(embeddings)}"
+        ), f"num_vectors_per_token is mismatch for weights / 指定的重みとnum_vectors_per_tokenの値が異なります: {len(embeddings)}"
         # print(token_ids, embeddings.size())
         for token_id, embedding in zip(token_ids_XTI, embeddings):
             token_embeds[token_id] = embedding
@@ -188,7 +188,7 @@ def train(args):
 
     print(f"create embeddings for {args.num_vectors_per_token} tokens, for {args.token_string}")
 
-    # データセットを準備する
+    # データセット准备
     blueprint_generator = BlueprintGenerator(ConfigSanitizer(True, True, False, False))
     if args.dataset_config is not None:
         print(f"Load dataset config from {args.dataset_config}")
@@ -232,7 +232,7 @@ def train(args):
     ds_for_collater = train_dataset_group if args.max_data_loader_n_workers == 0 else None
     collater = train_util.collater_class(current_epoch, current_step, ds_for_collater)
 
-    # make captions: tokenstring tokenstring1 tokenstring2 ...tokenstringn という文字列に書き換える超乱暴な実装
+    # make captions: tokenstring tokenstring1 tokenstring2 ...tokenstringn 超级暴力实施以重写为字符串
     if use_template:
         print(f"use template for training captions. is object: {args.use_object_template}")
         templates = imagenet_templates_small if args.use_object_template else imagenet_style_templates_small
@@ -264,15 +264,15 @@ def train(args):
     if cache_latents:
         assert (
             train_dataset_group.is_latent_cacheable()
-        ), "when caching latents, either color_aug or random_crop cannot be used / latentをキャッシュするときはcolor_augとrandom_cropは使えません"
+        ), "when caching latents, either color_aug or random_crop cannot be used / latentをキャッシュ做ときはcolor_augとrandom_cropは使えません"
 
-    # モデルに xformers とか memory efficient attention を組み込む
+    # 模型 xformers とか memory efficient attention を組み込む
     train_util.replace_unet_modules(unet, args.mem_eff_attn, args.xformers, args.sdpa)
     original_unet.UNet2DConditionModel.forward = unet_forward_XTI
     original_unet.CrossAttnDownBlock2D.forward = downblock_forward_XTI
     original_unet.CrossAttnUpBlock2D.forward = upblock_forward_XTI
 
-    # 学習を準備する
+    # 学習准备
     if cache_latents:
         vae.to(accelerator.device, dtype=weight_dtype)
         vae.requires_grad_(False)
@@ -290,14 +290,14 @@ def train(args):
         unet.enable_gradient_checkpointing()
         text_encoder.gradient_checkpointing_enable()
 
-    # 学習に必要なクラスを準備する
+    # 学習に必要なクラス准备
     print("prepare optimizer, data loader etc.")
     trainable_params = text_encoder.get_input_embeddings().parameters()
     _, _, optimizer = train_util.get_optimizer(args, trainable_params)
 
-    # dataloaderを準備する
-    # DataLoaderのプロセス数：0はメインプロセスになる
-    n_workers = min(args.max_data_loader_n_workers, os.cpu_count() - 1)  # cpu_count-1 ただし最大で指定された数まで
+    # dataloader准备
+    # DataLoader过程数量：0はメインプロセスになる
+    n_workers = min(args.max_data_loader_n_workers, os.cpu_count() - 1)  # cpu_count-1 但是，达到最大数字
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset_group,
         batch_size=1,
@@ -307,20 +307,20 @@ def train(args):
         persistent_workers=args.persistent_data_loader_workers,
     )
 
-    # 学習ステップ数を計算する
+    # 计算学习步骤的数量
     if args.max_train_epochs is not None:
         args.max_train_steps = args.max_train_epochs * math.ceil(
             len(train_dataloader) / accelerator.num_processes / args.gradient_accumulation_steps
         )
         print(f"override steps. steps for {args.max_train_epochs} epochs is / 指定エポックまでのステップ数: {args.max_train_steps}")
 
-    # データセット側にも学習ステップを送信
+    # 将学习步骤发送到数据集侧
     train_dataset_group.set_max_train_steps(args.max_train_steps)
 
-    # lr schedulerを用意する
+    # lr scheduler准备
     lr_scheduler = train_util.get_scheduler_fix(args, optimizer, accelerator.num_processes)
 
-    # acceleratorがなんかよろしくやってくれるらしい
+    # accelerator看来它会做这样的事情
     text_encoder, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
         text_encoder, optimizer, train_dataloader, lr_scheduler
     )
@@ -351,21 +351,21 @@ def train(args):
         vae.eval()
         vae.to(accelerator.device, dtype=weight_dtype)
 
-    # 実験的機能：勾配も含めたfp16学習を行う　PyTorchにパッチを当ててfp16でのgrad scaleを有効にする
+    # 实验功能：勾配も含めたfp16学習を行う　PyTorchにパッチを当ててfp16でのgrad scaleを有効に做
     if args.full_fp16:
         train_util.patch_accelerator_for_fp16_training(accelerator)
         text_encoder.to(weight_dtype)
 
-    # resumeする
+    # resume做
     train_util.resume_from_local_or_hf_if_specified(accelerator, args)
 
-    # epoch数を計算する
+    # epoch数を計算做
     num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
     num_train_epochs = math.ceil(args.max_train_steps / num_update_steps_per_epoch)
     if (args.save_n_epoch_ratio is not None) and (args.save_n_epoch_ratio > 0):
         args.save_every_n_epochs = math.floor(num_train_epochs / args.save_n_epoch_ratio) or 1
 
-    # 学習する
+    # 学習做
     total_batch_size = args.train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps
     print("running training / 学習開始")
     print(f"  num train images * repeats / 学習画像の数×繰り返し回数: {train_dataset_group.num_train_images}")
@@ -374,7 +374,7 @@ def train(args):
     print(f"  num epochs / epoch数: {num_train_epochs}")
     print(f"  batch size per device / バッチサイズ: {args.train_batch_size}")
     print(f"  total train batch size (with parallel & distributed & accumulation) / 総バッチサイズ（並列学習、勾配合計含む）: {total_batch_size}")
-    print(f"  gradient ccumulation steps / 勾配を合計するステップ数 = {args.gradient_accumulation_steps}")
+    print(f"  gradient ccumulation steps / 勾配を合計做ステップ数 = {args.gradient_accumulation_steps}")
     print(f"  total optimization steps / 学習ステップ数: {args.max_train_steps}")
 
     progress_bar = tqdm(range(args.max_train_steps), smoothing=0, disable=not accelerator.is_local_main_process, desc="steps")
@@ -425,7 +425,7 @@ def train(args):
                     if "latents" in batch and batch["latents"] is not None:
                         latents = batch["latents"].to(accelerator.device)
                     else:
-                        # latentに変換
+                        # latent转换
                         latents = vae.encode(batch["images"].to(dtype=weight_dtype)).latent_dist.sample()
                     latents = latents * 0.18215
                 b_size = latents.shape[0]
@@ -457,7 +457,7 @@ def train(args):
                 loss = torch.nn.functional.mse_loss(noise_pred.float(), target.float(), reduction="none")
                 loss = loss.mean([1, 2, 3])
 
-                loss_weights = batch["loss_weights"]  # 各sampleごとのweight
+                loss_weights = batch["loss_weights"]  # 每个sampleごとのweight
 
                 loss = loss * loss_weights
                 if args.min_snr_gamma:
@@ -465,7 +465,7 @@ def train(args):
                 if args.scale_v_pred_loss_like_noise_pred:
                     loss = scale_v_prediction_loss_like_noise_prediction(loss, timesteps, noise_scheduler)
 
-                loss = loss.mean()  # 平均なのでbatch_sizeで割る必要なし
+                loss = loss.mean()  # 因为平均batch_sizeで割る必要なし
 
                 accelerator.backward(loss)
                 if accelerator.sync_gradients and args.max_grad_norm != 0.0:
@@ -491,7 +491,7 @@ def train(args):
                 #     accelerator, args, None, global_step, accelerator.device, vae, tokenizer, text_encoder, unet, prompt_replacement
                 # )
 
-                # 指定ステップごとにモデルを保存
+                # 为每个指定步骤保存模型
                 if args.save_every_n_steps is not None and global_step % args.save_every_n_steps == 0:
                     accelerator.wait_for_everyone()
                     if accelerator.is_main_process:
@@ -573,7 +573,7 @@ def train(args):
 
     updated_embs = text_encoder.get_input_embeddings().weight[token_ids_XTI].data.detach().clone()
 
-    del accelerator  # この後メモリを使うのでこれは消す
+    del accelerator  # 之后，我将使用内存，以便我将其删除
 
     if is_main_process:
         ckpt_name = train_util.get_last_ckpt_name(args, "." + args.save_model_as)
@@ -652,10 +652,10 @@ def setup_parser() -> argparse.ArgumentParser:
         type=str,
         default="pt",
         choices=[None, "ckpt", "pt", "safetensors"],
-        help="format to save the model (default is .pt) / モデル保存時の形式（デフォルトはpt）",
+        help="format to save the model (default is .pt) / 保存模型时格式（デフォルトはpt）",
     )
 
-    parser.add_argument("--weights", type=str, default=None, help="embedding weights to initialize / 学習するネットワークの初期重み")
+    parser.add_argument("--weights", type=str, default=None, help="embedding weights to initialize / 学習做ネットワークの初期重み")
     parser.add_argument(
         "--num_vectors_per_token", type=int, default=1, help="number of vectors per token / トークンに割り当てるembeddingsの要素数"
     )
@@ -665,16 +665,16 @@ def setup_parser() -> argparse.ArgumentParser:
         default=None,
         help="token string used in training, must not exist in tokenizer / 学習時に使用されるトークン文字列、tokenizerに存在しない文字であること",
     )
-    parser.add_argument("--init_word", type=str, default=None, help="words to initialize vector / ベクトルを初期化に使用する単語、複数可")
+    parser.add_argument("--init_word", type=str, default=None, help="words to initialize vector / ベクトルを初期化に使用做単語、複数可")
     parser.add_argument(
         "--use_object_template",
         action="store_true",
-        help="ignore caption and use default templates for object / キャプションは使わずデフォルトの物体用テンプレートで学習する",
+        help="ignore caption and use default templates for object / キャプションは使わずデフォルトの物体用テンプレートで学習做",
     )
     parser.add_argument(
         "--use_style_template",
         action="store_true",
-        help="ignore caption and use default templates for stype / キャプションは使わずデフォルトのスタイル用テンプレートで学習する",
+        help="ignore caption and use default templates for stype / キャプションは使わずデフォルトのスタイル用テンプレートで学習做",
     )
 
     return parser

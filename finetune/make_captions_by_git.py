@@ -25,7 +25,7 @@ PATTERN_REPLACE = [
     re.compile("that says'the word \"( on it)?"),
 ]
 
-# 誤検知しまくりの with the word xxxx を消す
+# 输液 with the word xxxx を消す
 
 
 def remove_words(captions, debug):
@@ -52,12 +52,12 @@ def collate_fn_remove_corrupted(batch):
 
 
 def main(args):
-    # GITにバッチサイズが1より大きくても動くようにパッチを当てる: transformers 4.26.0用
+    # GIT批量大小1より大きくても動くようにパッチを当てる: transformers 4.26.0用
     org_prepare_input_ids_for_generation = GenerationMixin._prepare_input_ids_for_generation
-    curr_batch_size = [args.batch_size]  # ループの最後で件数がbatch_size未満になるので入れ替えられるように
+    curr_batch_size = [args.batch_size]  # 循环结束时的案件数batch_size未満になるので入れ替えられるように
 
-    # input_idsがバッチサイズと同じ件数である必要がある：バッチサイズはこの関数から参照できないので外から渡す
-    # ここより上で置き換えようとするとすごく大変
+    # input_ids必须与批处理大小相同：バッチサイズはこの関数から参照できないので外から渡す
+    # 在这里替换上面非常困难
     def _prepare_input_ids_for_generation_patch(self, bos_token_id, encoder_outputs):
         input_ids = org_prepare_input_ids_for_generation(self, bos_token_id, encoder_outputs)
         if input_ids.size()[0] != curr_batch_size[0]:
@@ -71,18 +71,18 @@ def main(args):
     image_paths = train_util.glob_images_pathlib(train_data_dir_path, args.recursive)
     print(f"found {len(image_paths)} images.")
 
-    # できればcacheに依存せず明示的にダウンロードしたい
+    # 如果可能的话cacheに依存せず明示的にダウンロードしたい
     print(f"loading GIT: {args.model_id}")
     git_processor = AutoProcessor.from_pretrained(args.model_id)
     git_model = AutoModelForCausalLM.from_pretrained(args.model_id).to(DEVICE)
     print("GIT loaded")
 
-    # captioningする
+    # captioning做
     def run_batch(path_imgs):
         imgs = [im for _, im in path_imgs]
 
         curr_batch_size[0] = len(path_imgs)
-        inputs = git_processor(images=imgs, return_tensors="pt").to(DEVICE)  # 画像はpil形式
+        inputs = git_processor(images=imgs, return_tensors="pt").to(DEVICE)  # 图像是pil形式
         generated_ids = git_model.generate(pixel_values=inputs.pixel_values, max_length=args.max_length)
         captions = git_processor.batch_decode(generated_ids, skip_special_tokens=True)
 
@@ -95,7 +95,7 @@ def main(args):
                 if args.debug:
                     print(image_path, caption)
 
-    # 読み込みの高速化のためにDataLoaderを使うオプション
+    # 加快阅读DataLoaderを使うオプション
     if args.max_data_loader_n_workers is not None:
         dataset = train_util.ImageLoadingDataset(image_paths)
         data = torch.utils.data.DataLoader(
@@ -144,23 +144,23 @@ def setup_parser() -> argparse.ArgumentParser:
         "--model_id",
         type=str,
         default="microsoft/git-large-textcaps",
-        help="model id for GIT in Hugging Face / 使用するGITのHugging FaceのモデルID",
+        help="model id for GIT in Hugging Face / 使用做GITのHugging FaceのモデルID",
     )
     parser.add_argument("--batch_size", type=int, default=1, help="batch size in inference / 推論時のバッチサイズ")
     parser.add_argument(
         "--max_data_loader_n_workers",
         type=int,
         default=None,
-        help="enable image reading by DataLoader with this number of workers (faster) / DataLoaderによる画像読み込みを有効にしてこのワーカー数を適用する（読み込みを高速化）",
+        help="enable image reading by DataLoader with this number of workers (faster) / DataLoaderによる画像読み込みを有効にしてこのワーカー数を適用做（読み込みを高速化）",
     )
     parser.add_argument("--max_length", type=int, default=50, help="max length of caption / captionの最大長")
     parser.add_argument(
         "--remove_words",
         action="store_true",
-        help="remove like `with the words xxx` from caption / `with the words xxx`のような部分をキャプションから削除する",
+        help="remove like `with the words xxx` from caption / `with the words xxx`のような部分をキャプションから削除做",
     )
     parser.add_argument("--debug", action="store_true", help="debug mode")
-    parser.add_argument("--recursive", action="store_true", help="search for images in subfolders recursively / サブフォルダを再帰的に検索する")
+    parser.add_argument("--recursive", action="store_true", help="search for images in subfolders recursively / サブフォルダを再帰的に検索做")
 
     return parser
 

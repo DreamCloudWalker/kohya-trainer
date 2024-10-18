@@ -41,7 +41,7 @@ def svd(args):
 
     assert args.v2 != args.sdxl or (
         not args.v2 and not args.sdxl
-    ), "v2 and sdxl cannot be specified at the same time / v2とsdxlは同時に指定できません"
+    ), "v2 and sdxl cannot be specified at the same time / v2和sdxlは同時に指定できません"
     if args.v_parameterization is None:
         args.v_parameterization = args.v2
 
@@ -79,7 +79,7 @@ def svd(args):
     lora_network_t = lora.create_network(1.0, args.dim, args.dim, None, text_encoders_t, unet_t, **kwargs)
     assert len(lora_network_o.text_encoder_loras) == len(
         lora_network_t.text_encoder_loras
-    ), f"model version is different (SD1.x vs SD2.x) / それぞれのモデルのバージョンが違います（SD1.xベースとSD2.xベース） "
+    ), f"model version is different (SD1.x vs SD2.x) / 每个模型的版本不同（SD1.xベース和SD2.xベース） "
 
     # get diffs
     diffs = {}
@@ -203,15 +203,15 @@ def svd(args):
 
 def setup_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--v2", action="store_true", help="load Stable Diffusion v2.x model / Stable Diffusion 2.xのモデルを読み込む")
+    parser.add_argument("--v2", action="store_true", help="load Stable Diffusion v2.x model / Stable Diffusion 2.x阅读模型")
     parser.add_argument(
         "--v_parameterization",
         type=bool,
         default=None,
-        help="make LoRA metadata for v-parameterization (default is same to v2) / 作成するLoRAのメタデータにv-parameterization用と設定する（省略時はv2と同じ）",
+        help="make LoRA metadata for v-parameterization (default is same to v2) / 作成するLoRAのメタデータにv-parameterization用和設定する（省略時はv2和同じ）",
     )
     parser.add_argument(
-        "--sdxl", action="store_true", help="load Stable Diffusion SDXL base model / Stable Diffusion SDXL baseのモデルを読み込む"
+        "--sdxl", action="store_true", help="load Stable Diffusion SDXL base model / Stable Diffusion SDXL base阅读模型"
     )
     parser.add_argument(
         "--save_precision",

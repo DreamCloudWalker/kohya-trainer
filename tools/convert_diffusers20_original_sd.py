@@ -9,7 +9,7 @@ import library.model_util as model_util
 
 
 def convert(args):
-    # 引数を確認する
+    # 检查参数
     load_dtype = torch.float16 if args.fp16 else None
 
     save_dtype = None
@@ -26,9 +26,9 @@ def convert(args):
     assert not is_load_ckpt or args.v1 != args.v2, f"v1 or v2 is required to load checkpoint / checkpointの読み込みにはv1/v2指定が必要です"
     # assert (
     #     is_save_ckpt or args.reference_model is not None
-    # ), f"reference model is required to save as Diffusers / Diffusers形式での保存には参照モデルが必要です"
+    # ), f"reference model is required to save as Diffusers / Diffusers需要参考模型以保存格式"
 
-    # モデルを読み込む
+    # 阅读模型
     msg = "checkpoint" if is_load_ckpt else ("Diffusers" + (" as fp16" if args.fp16 else ""))
     print(f"loading {msg}: {args.model_to_load}")
 
@@ -44,13 +44,13 @@ def convert(args):
         unet = pipe.unet
 
         if args.v1 == args.v2:
-            # 自動判定する
+            # 自动判断
             v2_model = unet.config.cross_attention_dim == 1024
             print("checking model version: model is " + ("v2" if v2_model else "v1"))
         else:
             v2_model = not args.v1
 
-    # 変換して保存する
+    # 转换并保存
     msg = ("checkpoint" + ("" if save_dtype is None else f" in {save_dtype}")) if is_save_ckpt else "Diffusers"
     print(f"converting and saving as {msg}: {args.model_to_save}")
 
@@ -71,10 +71,10 @@ def convert(args):
 def setup_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--v1", action="store_true", help="load v1.x model (v1 or v2 is required to load checkpoint) / 1.xのモデルを読み込む"
+        "--v1", action="store_true", help="load v1.x model (v1 or v2 is required to load checkpoint) / 1.xの阅读模型"
     )
     parser.add_argument(
-        "--v2", action="store_true", help="load v2.0 model (v1 or v2 is required to load checkpoint) / 2.0のモデルを読み込む"
+        "--v2", action="store_true", help="load v2.0 model (v1 or v2 is required to load checkpoint) / 2.0の阅读模型"
     )
     parser.add_argument(
         "--unet_use_linear_projection", action="store_true", help="When saving v2 model as Diffusers, set U-Net config to `use_linear_projection=true` (to match stabilityai's model) / Diffusers形式でv2モデルを保存するときにU-Netの設定を`use_linear_projection=true`にする（stabilityaiのモデルと合わせる）"

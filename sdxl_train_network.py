@@ -51,7 +51,7 @@ class SdxlNetworkTrainer(train_network.NetworkTrainer):
     ):
         if args.cache_text_encoder_outputs:
             if not args.lowram:
-                # メモリ消費を減らす
+                # 减少记忆消耗
                 print("move vae and unet to cpu to save memory")
                 org_vae_device = vae.device
                 org_unet_device = unet.device
@@ -79,7 +79,7 @@ class SdxlNetworkTrainer(train_network.NetworkTrainer):
                 vae.to(org_vae_device)
                 unet.to(org_unet_device)
         else:
-            # Text Encoderから毎回出力を取得するので、GPUに乗せておく
+            # Text Encoder因为我每次都会获得输出、GPUに乗せておく
             text_encoders[0].to(accelerator.device)
             text_encoders[1].to(accelerator.device)
 

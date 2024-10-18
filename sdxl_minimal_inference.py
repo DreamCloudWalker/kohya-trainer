@@ -1,4 +1,4 @@
-# 手元で推論を行うための最低限のコード。HuggingFace／DiffusersのCLIP、schedulerとVAEを使う
+# 手头推断的最低代码。HuggingFace／Diffusers的CLIP、schedulerとVAEを使う
 # Minimal code for performing inference at local. Use HuggingFace/Diffusers CLIP, scheduler and VAE
 
 import argparse
@@ -19,7 +19,7 @@ from safetensors.torch import load_file
 from library import model_util, sdxl_model_util
 import networks.lora as lora
 
-# scheduler: このあたりの設定はSD1/2と同じでいいらしい
+# scheduler: 这里的设置是SD1/2と同じ在いいらしい
 # scheduler: The settings around here seem to be the same as SD1/2
 SCHEDULER_LINEAR_START = 0.00085
 SCHEDULER_LINEAR_END = 0.0120
@@ -27,7 +27,7 @@ SCHEDULER_TIMESTEPS = 1000
 SCHEDLER_SCHEDULE = "scaled_linear"
 
 
-# Time EmbeddingはDiffusersからのコピー
+# Time Embedding牙齿Diffusersから的コピー
 # Time Embedding is copied from Diffusers
 
 
@@ -66,9 +66,9 @@ def get_timestep_embedding(x, outdim):
 
 
 if __name__ == "__main__":
-    # 画像生成条件を変更する場合はここを変更 / change here to change image generation conditions
+    # 画像生成条件を変更する場合牙齿ここを変更 / change here to change image generation conditions
 
-    # SDXLの追加のvector embeddingへ渡す値 / Values to pass to additional vector embedding of SDXL
+    # SDXL额外的vector embeddingへ渡す値 / Values to pass to additional vector embedding of SDXL
     target_height = 1024
     target_width = 1024
     original_height = target_height
@@ -102,31 +102,31 @@ if __name__ == "__main__":
     if args.prompt2 is None:
         args.prompt2 = args.prompt
 
-    # HuggingFaceのmodel id
+    # HuggingFace的model id
     text_encoder_1_name = "openai/clip-vit-large-patch14"
     text_encoder_2_name = "laion/CLIP-ViT-bigG-14-laion2B-39B-b160k"
 
-    # checkpointを読み込む。モデル変換についてはそちらの関数を参照
+    # checkpoint插入。モデル変換について牙齿そちら的関数を参照
     # Load checkpoint. For model conversion, see this function
 
-    # 本体RAMが少ない場合はGPUにロードするといいかも
+    # 身体RAMが少ない場合牙齿GPUにロードするといいかも
     # If the main RAM is small, it may be better to load it on the GPU
     text_model1, text_model2, vae, unet, _, _ = sdxl_model_util.load_models_from_sdxl_checkpoint(
         sdxl_model_util.MODEL_VERSION_SDXL_BASE_V0_9, args.ckpt_path, "cpu"
     )
 
-    # Text Encoder 1はSDXL本体でもHuggingFaceのものを使っている
+    # Text Encoder 1牙齿SDXL身体在もHuggingFace的も的を使っている
     # In SDXL, Text Encoder 1 is also using HuggingFace's
 
-    # Text Encoder 2はSDXL本体ではopen_clipを使っている
-    # それを使ってもいいが、SD2のDiffusers版に合わせる形で、HuggingFaceのものを使う
-    # 重みの変換コードはSD2とほぼ同じ
+    # Text Encoder 2牙齿SDXL身体在牙齿open_clipを使っている
+    # 你可以使用它、SD2的Diffusers版に合わせる形在、HuggingFace的も的を使う
+    # 重み的変換コード牙齿SD2とほぼ同じ
     # In SDXL, Text Encoder 2 is using open_clip
     # It's okay to use it, but to match the Diffusers version of SD2, use HuggingFace's
     # The weight conversion code is almost the same as SD2
 
-    # VAEの構造はSDXLもSD1/2と同じだが、重みは異なるようだ。何より謎のscale値が違う
-    # fp16でNaNが出やすいようだ
+    # VAE的構造牙齿SDXLもSD1/2と同じだが、重み牙齿異なるようだ。何より謎的scale値が違う
+    # fp16在NaNが出やすいようだ
     # The structure of VAE is the same as SD1/2, but the weights seem to be different. Above all, the mysterious scale value is different.
     # NaN seems to be more likely to occur in fp16
 
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     text_model2.eval()
 
     unet.set_use_memory_efficient_attention(True, False)
-    if torch.__version__ >= "2.0.0": # PyTorch 2.0.0 以上対応のxformersなら以下が使える
+    if torch.__version__ >= "2.0.0": # PyTorch 2.0.0 以上対応的xformersなら以下が使える
         vae.set_use_memory_efficient_attention_xformers(True)
 
     # Tokenizers
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     )
 
     def generate_image(prompt, prompt2, negative_prompt, seed=None):
-        # 将来的にサイズ情報も変えられるようにする / Make it possible to change the size information in the future
+        # 将来可以更改尺寸信息 / Make it possible to change the size information in the future
         # prepare embedding
         with torch.no_grad():
             # vector
@@ -184,11 +184,11 @@ if __name__ == "__main__":
             emb3 = get_timestep_embedding(torch.FloatTensor([target_height, target_width]).unsqueeze(0), 256)
             # print("emb1", emb1.shape)
             c_vector = torch.cat([emb1, emb2, emb3], dim=1).to(DEVICE, dtype=DTYPE)
-            uc_vector = c_vector.clone().to(DEVICE, dtype=DTYPE)  # ちょっとここ正しいかどうかわからない I'm not sure if this is right
+            uc_vector = c_vector.clone().to(DEVICE, dtype=DTYPE)  # 我不知道这是否就在这里 I'm not sure if this is right
 
             # crossattn
 
-        # Text Encoderを二つ呼ぶ関数  Function to call two Text Encoders
+        # Text Encoder两个功能  Function to call two Text Encoders
         def call_text_encoder(text, text2):
             # text encoder 1
             batch_encoding = tokenizer1(
@@ -204,7 +204,7 @@ if __name__ == "__main__":
             with torch.no_grad():
                 enc_out = text_model1(tokens, output_hidden_states=True, return_dict=True)
                 text_embedding1 = enc_out["hidden_states"][11]
-                # text_embedding = pipe.text_encoder.text_model.final_layer_norm(text_embedding)    # layer normは通さないらしい
+                # text_embedding = pipe.text_encoder.text_model.final_layer_norm(text_embedding)    # layer norm牙齿通さないらしい
 
             # text encoder 2
             with torch.no_grad():
@@ -215,7 +215,7 @@ if __name__ == "__main__":
                 # print("hidden_states2", text_embedding2_penu.shape)
                 text_embedding2_pool = enc_out["text_embeds"]
 
-            # 連結して終了 concat and finish
+            # 连接并结束 concat and finish
             text_embedding = torch.cat([text_embedding1, text_embedding2_penu], dim=2)
             return text_embedding, text_embedding2_pool
 
@@ -231,7 +231,7 @@ if __name__ == "__main__":
         text_embeddings = torch.cat([uc_ctx, c_ctx])
         vector_embeddings = torch.cat([uc_vector, c_vector])
 
-        # メモリ使用量を減らすにはここでText Encoderを削除するかCPUへ移動する
+        # メモリ使用量を減らすに牙齿ここ在Text Encoderを削除するかCPUへ移動する
 
         if seed is not None:
             random.seed(seed)
@@ -246,7 +246,7 @@ if __name__ == "__main__":
             generator = None
 
         # get the initial random noise unless the user supplied it
-        # SDXLはCPUでlatentsを作成しているので一応合わせておく、Diffusersはtarget deviceでlatentsを作成している
+        # SDXL牙齿CPU在latentsを作成している的在一応合わせておく、Diffusers牙齿target device在latentsを作成している
         # SDXL creates latents in CPU, Diffusers creates latents in target device
         latents_shape = (1, 4, target_height // 8, target_width // 8)
         latents = torch.randn(
@@ -262,7 +262,7 @@ if __name__ == "__main__":
         # set timesteps
         scheduler.set_timesteps(steps, DEVICE)
 
-        # このへんはDiffusersからのコピペ
+        # こ的へん牙齿Diffusersから的コピペ
         # Copy from Diffusers
         timesteps = scheduler.timesteps.to(DEVICE)  # .to(DTYPE)
         num_latent_input = 2
@@ -294,7 +294,7 @@ if __name__ == "__main__":
         image = (image * 255).round().astype("uint8")
         image = [Image.fromarray(im) for im in image]
 
-        # 保存して終了 save and finish
+        # 保存并完成 save and finish
         timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         for i, img in enumerate(image):
             img.save(os.path.join(args.output_dir, f"image_{timestamp}_{i:03d}.png"))

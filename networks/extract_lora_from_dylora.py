@@ -54,7 +54,7 @@ def split_lora_model(lora_sd, unit):
             elif "lora_up" in key:
                 new_sd[key] = value[:, :rank].contiguous()
             else:
-                # なぜかscaleするとおかしくなる……
+                # 不知何故scaleするとおかしくなる……
                 # this_rank = lora_sd[key.replace("alpha", "lora_down.weight")].size()[0]
                 # scale = math.sqrt(this_rank / rank)  # rank is > unit
                 # print(key, value.size(), this_rank, rank, value, scale)
@@ -101,7 +101,7 @@ def split(args):
 def setup_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--unit", type=int, default=None, help="size of rank to split into / rankを分割するサイズ")
+    parser.add_argument("--unit", type=int, default=None, help="size of rank to split into / rank大小分割")
     parser.add_argument(
         "--save_to",
         type=str,

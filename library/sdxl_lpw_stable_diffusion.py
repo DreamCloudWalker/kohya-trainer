@@ -255,9 +255,9 @@ def get_unweighted_text_embeddings(
                 text_input_chunk[:, -1] = text_input[0, -1]
             else:  # v2
                 for j in range(len(text_input_chunk)):
-                    if text_input_chunk[j, -1] != eos and text_input_chunk[j, -1] != pad:  # 最後に普通の文字がある
+                    if text_input_chunk[j, -1] != eos and text_input_chunk[j, -1] != pad:  # 终于有一个正常的角色
                         text_input_chunk[j, -1] = eos
-                    if text_input_chunk[j, 1] == pad:  # BOSだけであとはPAD
+                    if text_input_chunk[j, 1] == pad:  # BOS仅有的PAD
                         text_input_chunk[j, 1] = eos
 
             text_embedding, current_text_pool = get_hidden_states(
@@ -895,7 +895,7 @@ class SdxlStableDiffusionLongPromptWeightingPipeline:
         do_classifier_free_guidance = guidance_scale > 1.0
 
         # 3. Encode input prompt
-        # 実装を簡単にするためにtokenzer/text encoderを切り替えて二回呼び出す
+        # 使实施更容易tokenzer/text encoderを切り替えて二回呼び出す
         # To simplify the implementation, switch the tokenzer/text encoder and call it twice
         text_embeddings_list = []
         text_pool = None

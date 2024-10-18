@@ -59,7 +59,7 @@ class ImageLoadingPrepDataset(torch.utils.data.Dataset):
             image = preprocess_image(image)
             tensor = torch.tensor(image)
         except Exception as e:
-            print(f"Could not load image path / 画像を読み込めません: {img_path}, error: {e}")
+            print(f"Could not load image path / 我看不懂图像: {img_path}, error: {e}")
             return None
 
         return (tensor, img_path)
@@ -76,8 +76,8 @@ def collate_fn_remove_corrupted(batch):
 
 
 def main(args):
-    # hf_hub_downloadをそのまま使うとsymlink関係で問題があるらしいので、キャッシュディレクトリとforce_filenameを指定してなんとかする
-    # depreacatedの警告が出るけどなくなったらその時
+    # hf_hub_download如果您使用它symlink関係で問題があるらしいので、キャッシュディレクトリとforce_filenameを指定してなんとかする
+    # depreacated当时，警告发布
     # https://github.com/toriato/stable-diffusion-webui-wd14-tagger/issues/22
     if not os.path.exists(args.model_dir) or args.force_download:
         print(f"downloading wd14 tagger model from hf_hub. id: {args.repo_id}")
@@ -95,11 +95,11 @@ def main(args):
     else:
         print("using existing wd14 tagger model")
 
-    # 画像を読み込む
+    # 阅读图像
     model = load_model(args.model_dir)
 
     # label_names = pd.read_csv("2022_0000_0899_6549/selected_tags.csv")
-    # 依存ライブラリを増やしたくないので自力で読むよ
+    # 我不想增加依赖的库，所以我自己阅读
 
     with open(os.path.join(args.model_dir, CSV_FILE), "r", encoding="utf-8") as f:
         reader = csv.reader(f)
@@ -111,7 +111,7 @@ def main(args):
     general_tags = [row[1] for row in rows[1:] if row[2] == "0"]
     character_tags = [row[1] for row in rows[1:] if row[2] == "4"]
 
-    # 画像を読み込む
+    # 阅读图像
 
     train_data_dir_path = Path(args.train_data_dir)
     image_paths = train_util.glob_images_pathlib(train_data_dir_path, args.recursive)
@@ -128,13 +128,13 @@ def main(args):
         probs = probs.numpy()
 
         for (image_path, _), prob in zip(path_imgs, probs):
-            # 最初の4つはratingなので無視する
+            # 第一的4つはratingなので無視する
             # # First 4 labels are actually ratings: pick one with argmax
             # ratings_names = label_names[:4]
             # rating_index = ratings_names["probs"].argmax()
             # found_rating = ratings_names[rating_index: rating_index + 1][["name", "probs"]]
 
-            # それ以降はタグなのでconfidenceがthresholdより高いものを追加する
+            # 从那以后，这是一个标签confidenceがthresholdより高いものを追加する
             # Everything else is tags: pick any where prediction confidence > threshold
             combined_tags = []
             general_tag_text = ""
@@ -159,7 +159,7 @@ def main(args):
                         character_tag_text += ", " + tag_name
                         combined_tags.append(tag_name)
 
-            # 先頭のカンマを取る
+            # 进行第一个逗号
             if len(general_tag_text) > 0:
                 general_tag_text = general_tag_text[2:]
             if len(character_tag_text) > 0:
@@ -172,7 +172,7 @@ def main(args):
                 if args.debug:
                     print(f"\n{image_path}:\n  Character tags: {character_tag_text}\n  General tags: {general_tag_text}")
 
-    # 読み込みの高速化のためにDataLoaderを使うオプション
+    # 加快阅读DataLoaderを使うオプション
     if args.max_data_loader_n_workers is not None:
         dataset = ImageLoadingPrepDataset(image_paths)
         data = torch.utils.data.DataLoader(
@@ -202,7 +202,7 @@ def main(args):
                         image = image.convert("RGB")
                     image = preprocess_image(image)
                 except Exception as e:
-                    print(f"Could not load image path / 画像を読み込めません: {image_path}, error: {e}")
+                    print(f"Could not load image path / 我看不懂图像: {image_path}, error: {e}")
                     continue
             b_imgs.append((image_path, image))
 
@@ -226,7 +226,7 @@ def main(args):
 
 def setup_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
-    parser.add_argument("train_data_dir", type=str, help="directory for train images / 学習画像データのディレクトリ")
+    parser.add_argument("train_data_dir", type=str, help="directory for train images / 学习图像数据目录")
     parser.add_argument(
         "--repo_id",
         type=str,
@@ -291,7 +291,7 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    # スペルミスしていたオプションを復元する
+    # 恢复精子的选择
     if args.caption_extention is not None:
         args.caption_extension = args.caption_extention
 

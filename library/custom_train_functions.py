@@ -87,7 +87,7 @@ def add_v_prediction_like_loss(loss, timesteps, noise_scheduler, v_pred_like_los
     return loss
 
 
-# TODO train_utilと分散しているのでどちらかに寄せる
+# TODO train_util因为它被分散了，所以我将其发送给任何一个
 
 
 def add_custom_train_arguments(parser: argparse.ArgumentParser, support_weighted_captions: bool = True):
@@ -310,9 +310,9 @@ def get_unweighted_text_embeddings(
                 text_input_chunk[:, -1] = text_input[0, -1]
             else:  # v2
                 for j in range(len(text_input_chunk)):
-                    if text_input_chunk[j, -1] != eos and text_input_chunk[j, -1] != pad:  # 最後に普通の文字がある
+                    if text_input_chunk[j, -1] != eos and text_input_chunk[j, -1] != pad:  # 终于有一个正常的角色
                         text_input_chunk[j, -1] = eos
-                    if text_input_chunk[j, 1] == pad:  # BOSだけであとはPAD
+                    if text_input_chunk[j, 1] == pad:  # BOS仅有的PAD
                         text_input_chunk[j, 1] = eos
 
             if clip_skip is None or clip_skip == 1:
